@@ -20,6 +20,13 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
 
 .journal-history-item{display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);padding:13px 0}
 .journal-history-item:first-child{border-top:0}
+.global-search-group{margin-bottom:16px}
+.global-search-group h2{font-size:14px;margin:0 0 8px;color:var(--muted);font-weight:700}
+.global-search-result{width:100%;display:block;text-align:left;border:0;border-top:1px solid var(--line);padding:13px 2px;background:transparent;color:var(--ink);cursor:pointer}
+.global-search-result:first-of-type{border-top:0}
+.global-search-result strong{display:block;font-size:14px;font-weight:680;overflow-wrap:anywhere}
+.global-search-result span{display:block;color:var(--muted);font-size:12px;line-height:1.45;margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere}
+
 .journal-history-date{display:block;font-size:13px;font-weight:700}
 .journal-history-mood{display:block;color:var(--muted);font-size:11px;margin-top:3px}
 .journal-history-body{display:block;font-size:13px;color:var(--muted);margin-top:5px;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
@@ -149,6 +156,11 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
    <div id="journalHistory"></div>
   </div>
  </section>
+ <section id="search" class="view"><h1 class="page-title">Search</h1><p class="page-sub">Find anything you've saved in DAYDIARY.</p>
+  <div class="panel"><label class="small" for="globalSearch" style="display:block;margin-bottom:8px">Search everything</label>
+   <input id="globalSearch" class="field" type="search" autocomplete="off" placeholder="⌕  Search tasks, notes, habits, journal..." oninput="renderSearch()">
+   <p class="small" id="globalSearchCount" role="status" aria-live="polite" style="margin:10px 0 0">Start typing to search your DAYDIARY.</p></div>
+  <div id="globalSearchResults"></div></section>
  <section id="progress" class="view"><h1 class="page-title">Progress</h1><p class="page-sub">Small wins add up.</p>
   <div class="panel"><div class="panel-head"><h2>Today's progress</h2><span class="pill" id="progressPct">0%</span></div><div class="progressbar"><i id="progressBar"></i></div><p class="small" id="progressLabel">0 of 0 habits completed today</p></div>
   <div class="panel">
@@ -181,6 +193,7 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
  <button class="tab active" data-tab="home" onclick="go('home')"><b>⌂</b>Home</button>
  <button class="tab" data-tab="notes" onclick="go('notes')"><b>▤</b>Notes</button>
  <button class="tab" data-tab="journal" onclick="go('journal')"><b>✎</b>Journal</button>
+ <button class="tab" data-tab="search" onclick="go('search')"><b>⌕</b>Search</button>
  <button class="tab" data-tab="progress" onclick="go('progress')"><b>◉</b>Progress</button>
  <button class="tab" data-tab="planner" onclick="go('planner')"><b>▦</b>Planner</button>
  <button class="tab" data-tab="assistant" onclick="go('assistant')"><b>✧</b>Assistant</button>
@@ -233,7 +246,7 @@ const tags=[...new Set(data.tasks.map(t=>t.tag).filter(Boolean))].sort(),tf=$('t
 tasksList.innerHTML=shown.length?shown.map(taskHTML).join(''):'<div class="empty">No tasks yet. Add one above.</div>';
 const ft=$('focusTask'),fv=ft.value;ft.innerHTML='<option value="">No specific task</option>'+open.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');if(open.some(t=>t.id===fv))ft.value=fv;$('weekGrid').innerHTML=weekHTML();renderHabitCalendar();
 habitsList.innerHTML=data.habits.length?data.habits.map(h=>{const on=has(h.days,day()),st=streak(h);return `<div class="habit"><button class="check ${on?'done':''}" onclick="toggleHabit('${h.id}')" aria-pressed="${on}" aria-label="Done today: ${esc(h.name)}">${on?'✓':''}</button><div class="item-main"><div class="item-title">${esc(h.name)}</div><div class="item-meta">${st>1?st+'-day streak · ':''}${(h.days||[]).length} days completed</div></div><button class="delete" onclick="delHabit('${h.id}')" aria-label="Delete ${esc(h.name)}">×</button></div>`}).join(''):'<div class="empty">Add a habit to start tracking progress.</div>';
-if(document.activeElement!==noteSearch)renderNotes();renderNoteView()}
+if(document.activeElement!==noteSearch)renderNotes();renderNoteView();if($('globalSearch'))renderSearch()}
 function askPreset(s){prompt.value=s;ask()}
 function ask(){const q=prompt.value.trim().toLowerCase();if(!q)return;const open=sortT(data.tasks.filter(t=>!t.done)),od=open.filter(t=>t.due&&t.due<day()),left=data.habits.filter(h=>!has(h.days,day())),best=Math.max(0,...data.habits.map(streak)),t=re=>re.test(q);let r;
 if(t(/\b(habits?|streaks?|routines?)\b/))r=data.habits.length?`You’ve completed ${data.habits.length-left.length} of ${data.habits.length} habits today${left.length?`. Next up: “${left[0].name}”`:'. Nice work'}. Your longest current streak is ${best} day${best===1?'':'s'}. Keep new habits small enough to repeat on your worst day.`:'Start small: add one habit that takes less than ten minutes, and make it easy to repeat.';
@@ -327,6 +340,24 @@ function renderJournalHistory(){
  $('journalHistory').innerHTML=entries.length?entries.map(e=>`<button class="journal-history-item" onclick="selectJournalDate('${e.date}')"><span class="journal-history-date">${new Date(e.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</span><span class="journal-history-mood">${e.mood?esc(e.mood)+' · ':''}</span><span class="journal-history-body">${esc(e.body||'Mood check-in')}</span></button>`).join(''):'<div class="empty">'+(q?'No entries match your search.':'Your saved entries will appear here.')+'</div>';
 }
 
+function renderSearch(){
+ const q=($('globalSearch').value||'').trim().toLowerCase(),host=$('globalSearchResults'),count=$('globalSearchCount');
+ if(!q){count.textContent='Start typing to search your DAYDIARY.';host.innerHTML='<div class="panel"><div class="empty">Search across tasks, notes, habits, and journal entries. Results update as you type.</div></div>';return}
+ const terms=q.split(/\s+/).filter(Boolean),matches=value=>{const hay=String(value||'').toLowerCase();return terms.every(t=>hay.includes(t))};
+ const groups=[];
+ const tasks=data.tasks.filter(t=>matches([t.title,t.tag,t.due,t.time,t.done?'completed':'open'].join(' ')));
+ if(tasks.length)groups.push({name:'Tasks',items:tasks.map(t=>({title:t.title||'Untitled task',detail:[t.done?'Completed':'Not completed',t.due&&new Date(t.due+'T12:00:00').toLocaleDateString(),t.tag&&'#'+t.tag].filter(Boolean).join(' · '),action:"go('planner')"}))});
+ const notes=data.notes.filter(n=>matches([n.title,n.body,n.pin?'pinned':''].join(' ')));
+ if(notes.length)groups.push({name:'Notes',items:notes.map(n=>({title:n.title||'Untitled note',detail:(n.body||'No additional text').slice(0,150),action:"openNote('"+n.id+"')"}))});
+ const habits=data.habits.filter(h=>matches(h.name));
+ if(habits.length)groups.push({name:'Habits',items:habits.map(h=>({title:h.name,detail:(h.days||[]).length+' days completed',action:"go('progress')"}))});
+ const journal=(data.journal||[]).filter(e=>matches([e.body,e.mood,e.date].join(' '))).sort((a,b)=>b.date.localeCompare(a.date));
+ if(journal.length)groups.push({name:'Journal',items:journal.map(e=>({title:new Date(e.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'}),detail:[e.mood,e.body||'Mood check-in'].filter(Boolean).join(' · ').slice(0,180),action:"selectJournalDate('"+e.date+"');go('journal')"}))});
+ const total=groups.reduce((n,g)=>n+g.items.length,0);
+ count.textContent=total+' result'+(total===1?'':'s')+' found';
+ host.innerHTML=groups.length?groups.map(g=>'<section class="panel global-search-group"><h2>'+g.name+' · '+g.items.length+'</h2>'+g.items.map(x=>'<button class="global-search-result" onclick="'+x.action+'"><strong>'+esc(x.title)+'</strong><span>'+esc(x.detail)+'</span></button>').join('')+'</section>').join(''):'<div class="panel"><div class="empty">No matches found. Try a different word.</div></div>';
+}
+
 let focus=null;try{focus=JSON.parse(localStorage.getItem('pulse.focus'))}catch(e){}
 let focusSessions=[];try{focusSessions=JSON.parse(localStorage.getItem('pulse.focusSessions'))||[]}catch(e){}
 if(!Array.isArray(focusSessions))focusSessions=[];
@@ -396,7 +427,7 @@ function syncUI(){const on=!!sync.refresh;$('syncOut').classList.toggle('hidden'
 let viewId=null;
 function openNote(id){go('notes');viewId=id;renderNoteView()}
 function renderNoteView(){const n=viewId&&data.notes.find(x=>x.id===viewId);if(viewId&&!n)viewId=null;const v=!!n;['noteForm','noteSearch','notesPanel'].forEach(i=>$(i).classList.toggle('hidden',v));$('noteView').classList.toggle('hidden',!v);if(v)$('noteView').innerHTML=`<div class="note-title" style="font-size:20px;overflow-wrap:anywhere">${esc(n.title)}</div><div class="item-meta">${n.pin?'Pinned · ':''}${new Date(n.date).toLocaleDateString()}${n.edited?' · edited':''}</div><div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5;margin:16px 0">${n.body?esc(n.body):'<span class="small">No text in this note.</span>'}</div><div class="addrow" style="flex-wrap:wrap;margin-bottom:0"><button class="secondary" onclick="go('notes')">All notes</button><button class="secondary" onclick="editNote('${n.id}')">Edit</button><button class="secondary" onclick="pinNote('${n.id}')">${n.pin?'Unpin':'Pin'}</button><button class="secondary" onclick="delNote('${n.id}')">Delete</button></div>`}
-Object.assign(window,{go,addNote,editNote,cancelEdit,delNote,renderNotes,addTask,toggleTask,delTask,addHabit,toggleHabit,delHabit,askPreset,ask,exportData,importData,toggleTheme,pinNote,startFocus,startCustomFocus,pauseFocus,resumeFocus,dismissFocusComplete,stopFocus,authGo,signOut,syncNow,openNote});
+Object.assign(window,{go,addNote,editNote,cancelEdit,delNote,renderNotes,renderSearch,addTask,toggleTask,delTask,addHabit,toggleHabit,delHabit,askPreset,ask,exportData,importData,toggleTheme,pinNote,startFocus,startCustomFocus,pauseFocus,resumeFocus,dismissFocusComplete,stopFocus,authGo,signOut,syncNow,openNote});
 [[noteTitle,'Note title'],[noteBody,'Note text'],[noteSearch,'Search notes'],[taskInput,'New task'],[habitInput,'New habit'],[prompt,'Ask DAYDIARY']].forEach(([el,l])=>el.setAttribute('aria-label',l));answer.setAttribute('role','status');
 document.querySelector('.tab.active').setAttribute('aria-current','page');setTheme(document.documentElement.dataset.theme||'light');
 const now=new Date(),hour=now.getHours();greeting.textContent=(hour<12?'Good morning.':hour<17?'Good afternoon.':'Good evening.');today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});$('journalDate').value=day();render();loadJournalDate();renderJournalCalendar();renderJournalHistory();
