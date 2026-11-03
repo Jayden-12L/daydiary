@@ -89,7 +89,7 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
   </div>
   <div class="metrics">
    <div class="metric"><div class="eyebrow">DUE TODAY</div><div class="num" id="dashDueToday">0</div><div class="small">Tasks on today's list</div></div>
-   <div class="metric"><div class="eyebrow">TASKS COMPLETED</div><div class="num" id="dashTasksDone">0</div><div class="small">Completed overall</div></div>
+   <div class="metric"><div class="eyebrow">TASKS DONE TODAY</div><div class="num" id="dashTasksDone">0/0</div><div class="small" id="dashTasksDoneLabel">Today's tasks completed</div><div role="progressbar" aria-label="Tasks completed today" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="dashTasksDoneTrack" style="height:7px;background:var(--soft);border-radius:99px;overflow:hidden;margin-top:13px"><div id="dashTasksDoneBar" style="height:100%;width:0%;background:var(--green);border-radius:99px;transition:width .3s ease"></div></div><div class="small" id="dashTasksDonePercent" style="margin-top:7px">0% complete</div></div>
    <div class="metric"><div class="eyebrow">HABITS TODAY</div><div class="num" id="dashHabitsDone">0/0</div><div class="small">Habits checked off</div></div>
   </div>
   <div class="panel">
@@ -309,14 +309,19 @@ const ft=$('focusTask'),fv=ft.value;ft.innerHTML='<option value="">No specific t
 habitsList.innerHTML=data.habits.length?data.habits.map(h=>{const on=has(h.days,day()),st=streak(h);return `<div class="habit"><button class="check ${on?'done':''}" onclick="toggleHabit('${h.id}')" aria-pressed="${on}" aria-label="Done today: ${esc(h.name)}">${on?'✓':''}</button><div class="item-main"><div class="item-title">${esc(h.name)}</div><div class="item-meta">${st>1?st+'-day streak · ':''}${(h.days||[]).length} days completed</div></div><button class="delete" onclick="delHabit('${h.id}')" aria-label="Delete ${esc(h.name)}">×</button></div>`}).join(''):'<div class="empty">Add a habit to start tracking progress.</div>';
 if(document.activeElement!==noteSearch)renderNotes();renderNoteView();if($('globalSearch'))renderSearch();
 const dueToday=sortT(data.tasks.filter(t=>!t.done&&t.due===day()));
-const doneTasks=data.tasks.filter(t=>t.done).length;
-const completedHabits=data.habits.filter(h=>has(h.days,day())).length;
 const tasksScheduledToday=data.tasks.filter(t=>t.due===day());
+const doneTodayTasks=tasksScheduledToday.filter(t=>t.done).length;
+const tasksTodayPct=tasksScheduledToday.length?Math.round(doneTodayTasks/tasksScheduledToday.length*100):0;
+const completedHabits=data.habits.filter(h=>has(h.days,day())).length;
 const dailyTotal=tasksScheduledToday.length+data.habits.length;
 const dailyDone=tasksScheduledToday.filter(t=>t.done).length+completedHabits;
 const dailyPct=dailyTotal?Math.round(dailyDone/dailyTotal*100):0;
 $('dashDueToday').textContent=dueToday.length;
-$('dashTasksDone').textContent=doneTasks;
+$('dashTasksDone').textContent=doneTodayTasks+'/'+tasksScheduledToday.length;
+$('dashTasksDoneLabel').textContent=tasksScheduledToday.length+' task'+(tasksScheduledToday.length===1?'':'s')+' scheduled today';
+$('dashTasksDoneBar').style.width=tasksTodayPct+'%';
+$('dashTasksDonePercent').textContent=tasksTodayPct+'% complete';
+$('dashTasksDoneTrack').setAttribute('aria-valuenow',tasksTodayPct);
 $('dashHabitsDone').textContent=completedHabits+'/'+data.habits.length;
 $('dashProgressPercent').textContent=dailyPct+'%';
 $('dashRingNumber').textContent=dailyPct+'%';
