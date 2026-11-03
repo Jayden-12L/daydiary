@@ -165,7 +165,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
 #dashUpcomingPanel{grid-column:1/7}
 #dashQuickPanel{grid-column:7/-1}
 #appearancePanel{grid-column:1/7}
-#syncPanel{grid-column:7/-1;margin-top:0}
+#syncPanel{margin:0;padding:15px}
+.account-guide-stack{grid-column:7/-1;display:flex;flex-direction:column;gap:10px;align-self:start;min-width:0}
+.sync-card .panel-head{margin-bottom:9px}
+.sync-card .field{padding:9px 11px;margin:4px 0 8px}
+.sync-card .addrow{margin-top:5px}
+.account-guide-stack .manual-launch{margin-top:0;min-height:58px;padding:10px 13px}
 #home>.panel{margin-bottom:0;min-width:0}
 #dashQuickPanel .quickgrid{grid-template-columns:repeat(4,minmax(0,1fr))}
 #appearancePanel #displayName{min-width:0}
@@ -347,8 +352,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
     <option value="comfortable">Comfortable</option><option value="compact">Compact</option>
    </select>
   </div>
+  <div class="account-guide-stack">
   <div class="panel sync-card" id="syncPanel"><div class="panel-head"><h2>Sync &amp; account</h2></div><p class="small" style="margin:0 0 14px">Keep your DAYDIARY data backed up and available across devices.</p><div id="syncOut"><label class="small" for="syEmail">Email</label><input class="field" id="syEmail" type="email" placeholder="you@example.com" autocomplete="email"><label class="small" for="syPass">Password</label><input class="field" id="syPass" type="password" placeholder="At least 6 characters" autocomplete="current-password"><div class="addrow"><button class="primary" type="button" onclick="authGo('in')">Sign in</button><button class="secondary" type="button" onclick="authGo('up')">Create account</button></div></div><div id="syncIn" class="hidden"><p id="syncWho" class="small"></p><div class="addrow"><button class="primary" type="button" onclick="syncNow()">Sync now</button><button class="secondary" type="button" onclick="signOut()">Sign out</button></div></div><p id="syncMsg" class="small" role="status" aria-live="polite" style="margin:12px 0 0"></p></div>
   <button class="manual-launch" type="button" onclick="toggleManual(true)"><span class="manual-launch-icon">ⓘ</span><span><strong>How to use DAYDIARY</strong><small>Open the complete guide</small></span><span class="manual-launch-arrow">›</span></button>
+  </div>
   <div class="manual-overlay hidden" id="manualOverlay" role="dialog" aria-modal="true" aria-labelledby="manualTitle" onclick="if(event.target===this)toggleManual(false)">
    <div class="manual-sheet">
     <div class="manual-top"><div><div class="eyebrow">DAYDIARY GUIDE</div><h1 id="manualTitle">How to use DAYDIARY</h1><p class="small">A quick guide to every part of your workspace.</p></div><button class="manual-close" type="button" aria-label="Close guide" onclick="toggleManual(false)">×</button></div>
