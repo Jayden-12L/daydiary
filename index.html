@@ -17,6 +17,27 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
 .toast button{border:0;background:none;color:inherit;font-weight:750;text-decoration:underline;padding:0}
 .wk{display:grid;grid-template-columns:minmax(0,1fr) repeat(7,30px);gap:6px;align-items:center;padding:7px 0}.wk b{font-size:11px;color:var(--muted);text-align:center;font-weight:650}.wk .item-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dot{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--check);background:var(--card);padding:0;justify-self:center}.dot.on{background:var(--green);border-color:var(--green)}
 .note[role=button]{cursor:pointer}
+
+.month-controls{display:flex;gap:7px}.month-nav{min-width:38px;padding:7px 11px;font-size:20px;line-height:1}
+.month-title{font-size:14px;font-weight:700;margin:-4px 0 14px}
+.month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.month-weekday{text-align:center;color:var(--muted);font-size:11px;font-weight:650;padding:5px 0}
+.month-cell{min-width:0;min-height:54px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);padding:6px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.month-cell:disabled{opacity:.38;cursor:default}
+.month-cell.selected{outline:2px solid var(--ink);outline-offset:1px}
+.month-cell.today .month-day{font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.month-day{font-size:13px;font-weight:600}
+.month-count{font-size:10px;color:var(--muted)}
+.heat-0{background:var(--soft)!important}.heat-1{background:#d9f0e6!important}.heat-2{background:#a9dfc8!important}.heat-3{background:#68c49b!important}.heat-4{background:#26966b!important;color:#fff!important}
+:root[data-theme=dark] .heat-1{background:#244437!important}:root[data-theme=dark] .heat-2{background:#286448!important}:root[data-theme=dark] .heat-3{background:#27875c!important}:root[data-theme=dark] .heat-4{background:#3bbf8c!important;color:#07150f!important}
+.month-legend{display:flex;align-items:center;justify-content:flex-end;gap:5px;margin:13px 0 4px;color:var(--muted);font-size:10px}
+.month-legend i{width:13px;height:13px;border-radius:4px;border:1px solid var(--line)}
+.selected-day{border-top:1px solid var(--line);margin-top:14px;padding-top:13px}
+.selected-day-title{font-size:13px;font-weight:700;margin-bottom:8px}
+.selected-habit{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--line);font-size:13px}
+.selected-habit:first-of-type{border-top:0}
+.selected-habit .check{width:19px;height:19px;border-radius:6px}
+@media(max-width:420px){.month-grid{gap:4px}.month-cell{min-height:47px;border-radius:9px}.month-count{font-size:9px}}
 </style>
 </head>
 <body>
@@ -83,6 +104,13 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
  </section>
  <section id="progress" class="view"><h1 class="page-title">Progress</h1><p class="page-sub">Small wins add up.</p>
   <div class="panel"><div class="panel-head"><h2>Today's progress</h2><span class="pill" id="progressPct">0%</span></div><div class="progressbar"><i id="progressBar"></i></div><p class="small" id="progressLabel">0 of 0 habits completed today</p></div>
+  <div class="panel">
+   <div class="panel-head"><h2>Habit calendar</h2><div class="month-controls"><button class="secondary month-nav" onclick="shiftHabitMonth(-1)" aria-label="Previous month">‹</button><button class="secondary month-nav" onclick="shiftHabitMonth(1)" aria-label="Next month">›</button></div></div>
+   <div class="month-title" id="habitMonthTitle"></div>
+   <div class="month-grid" id="habitMonthGrid" aria-label="Monthly habit activity"></div>
+   <div class="month-legend"><span>Less</span><i class="heat-0"></i><i class="heat-1"></i><i class="heat-2"></i><i class="heat-3"></i><i class="heat-4"></i><span>More</span></div>
+   <div class="selected-day" id="habitDayDetails"></div>
+  </div>
   <div class="panel"><div class="panel-head"><h2>This week</h2></div><div id="weekGrid"></div></div>
   <div class="panel"><div class="panel-head"><h2>Your habits</h2></div><div class="addrow"><input id="habitInput" class="field" placeholder="Add a habit"><button class="primary" onclick="addHabit()">Add</button></div><div id="habitsList"></div></div>
  </section>
@@ -154,7 +182,7 @@ homeTasks.innerHTML=open.length?open.slice(0,5).map(taskHTML).join(''):'<div cla
 homeNotes.innerHTML=data.notes.length?sortN(data.notes).slice(0,3).map(n=>`<div class="note" role="button" tabindex="0" onclick="openNote('${n.id}')" onkeydown="if(event.key==='Enter')openNote('${n.id}')"><div class="item-main"><div class="note-title">${esc(n.title)}</div><div class="note-body">${esc(n.body)}</div></div></div>`).join(''):'<div class="empty">Your notes will show up here.</div>';
 const tags=[...new Set(data.tasks.map(t=>t.tag).filter(Boolean))].sort(),tf=$('tagFilter'),cur=tf.value;tf.innerHTML='<option value="">All tags</option>'+tags.map(g=>`<option>${esc(g)}</option>`).join('');tf.value=tags.includes(cur)?cur:'';tf.classList.toggle('hidden',!tags.length);const shown=sortT(data.tasks.filter(t=>!tf.value||t.tag===tf.value));
 tasksList.innerHTML=shown.length?shown.map(taskHTML).join(''):'<div class="empty">No tasks yet. Add one above.</div>';
-const ft=$('focusTask'),fv=ft.value;ft.innerHTML='<option value="">No specific task</option>'+open.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');if(open.some(t=>t.id===fv))ft.value=fv;$('weekGrid').innerHTML=weekHTML();
+const ft=$('focusTask'),fv=ft.value;ft.innerHTML='<option value="">No specific task</option>'+open.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');if(open.some(t=>t.id===fv))ft.value=fv;$('weekGrid').innerHTML=weekHTML();renderHabitCalendar();
 habitsList.innerHTML=data.habits.length?data.habits.map(h=>{const on=has(h.days,day()),st=streak(h);return `<div class="habit"><button class="check ${on?'done':''}" onclick="toggleHabit('${h.id}')" aria-pressed="${on}" aria-label="Done today: ${esc(h.name)}">${on?'✓':''}</button><div class="item-main"><div class="item-title">${esc(h.name)}</div><div class="item-meta">${st>1?st+'-day streak · ':''}${(h.days||[]).length} days completed</div></div><button class="delete" onclick="delHabit('${h.id}')" aria-label="Delete ${esc(h.name)}">×</button></div>`}).join(''):'<div class="empty">Add a habit to start tracking progress.</div>';
 if(document.activeElement!==noteSearch)renderNotes();renderNoteView()}
 function askPreset(s){prompt.value=s;ask()}
@@ -173,6 +201,42 @@ function toggleTheme(){const t=document.documentElement.dataset.theme==='dark'?'
 const QUOTES=['Small steps, repeated daily, beat big plans left for later.','Start with the next small thing.','You don’t need more time, just a clear first step.','Done is a good place to begin.','Rest is part of the plan, not a break from it.','Make it easy to start and hard to skip.','One focused hour can change a whole day.','Progress rarely feels dramatic while it’s happening.','Decide what matters, then protect it.','A messy start still counts.','Consistency is quiet, and it adds up.','Do the hard thing first, while it’s still small.','Your future self will thank you for ten minutes today.','Clear your head by writing it down.','Write it down so your mind can rest.','Today is a good day to finish something small.','Enough effort, repeated, becomes a habit.','Slow progress is still progress.','Choose one thing and give it your full attention.','Begin before you feel ready.','Tidy the small things and the big ones get lighter.','Notice what went well today.','A short walk can fix a long afternoon.','Plan lightly, then follow through.','What you do most days matters more than what you do once.','Ask what the next step is, not what the whole path is.','Protect your mornings and your evenings will thank you.','Take the pressure off and keep the habit.','Good days are built from ordinary hours.','You can pause without quitting.','Make tomorrow easier before you go to bed.','Be kind to yourself and keep going.','Finish one task before you open another.','Your attention is worth guarding.','Look back at how far you’ve come this week.','Keep your promises to yourself.','Less rushing, more doing.','A clear list makes a quieter mind.','Some days the win is simply showing up.','Turn the big goal into a ten-minute start.','Rest, then return with fresh eyes.','Little by little is still a lot.','Say no to something so you can say yes to what matters.','Today counts, even if it’s ordinary.','Keep the streak, but don’t fear breaking it.'];
 function setQuote(){$('quote').textContent=QUOTES[Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5)%QUOTES.length]}
 function pinNote(id){const n=data.notes.find(x=>x.id===id);if(n){n.pin=!n.pin;save()}}
+let habitCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+let selectedHabitDate=day();
+function shiftHabitMonth(delta){
+ habitCalendarMonth=new Date(habitCalendarMonth.getFullYear(),habitCalendarMonth.getMonth()+delta,1);
+ selectedHabitDate=ymd(habitCalendarMonth);
+ renderHabitCalendar();
+}
+function renderHabitCalendar(){
+ const y=habitCalendarMonth.getFullYear(),m=habitCalendarMonth.getMonth();
+ const first=new Date(y,m,1),daysInMonth=new Date(y,m+1,0).getDate(),offset=first.getDay();
+ $('habitMonthTitle').textContent=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+ const headers=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+ let html=headers.map(x=>'<div class="month-weekday">'+x+'</div>').join('');
+ for(let i=0;i<offset;i++)html+='<div aria-hidden="true"></div>';
+ for(let n=1;n<=daysInMonth;n++){
+  const date=ymd(new Date(y,m,n)),count=data.habits.filter(h=>has(h.days,date)).length;
+  const ratio=data.habits.length?count/data.habits.length:0;
+  const level=count===0?0:Math.min(4,Math.ceil(ratio*4));
+  const future=date>day(),selected=date===selectedHabitDate,today=date===day();
+  html+=`<button class="month-cell heat-${level} ${selected?'selected':''} ${today?'today':''}" onclick="selectHabitDate('${date}')" ${future?'disabled':''} aria-pressed="${selected}" aria-label="${new Date(date+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}: ${count} of ${data.habits.length} habits completed">
+   <span class="month-day">${n}</span><span class="month-count">${data.habits.length?count+'/'+data.habits.length:'—'}</span>
+  </button>`;
+ }
+ $('habitMonthGrid').innerHTML=html;
+ renderHabitDayDetails();
+}
+function selectHabitDate(date){selectedHabitDate=date;renderHabitCalendar()}
+function renderHabitDayDetails(){
+ const d=selectedHabitDate||day(),label=new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+ const completed=data.habits.filter(h=>has(h.days,d)).length;
+ const rows=data.habits.length?data.habits.map(h=>{
+  const on=has(h.days,d),future=d>day();
+  return `<div class="selected-habit"><button class="check ${on?'done':''}" onclick="toggleHabit('${h.id}','${d}')" ${future?'disabled':''} aria-pressed="${on}" aria-label="${on?'Mark incomplete':'Mark complete'}: ${esc(h.name)}">${on?'✓':''}</button><span class="item-main">${esc(h.name)}</span><span class="small">${on?'Completed':'Not completed'}</span></div>`;
+ }).join(''):'<div class="empty">Add a habit below to start building your calendar.</div>';
+ $('habitDayDetails').innerHTML=`<div class="selected-day-title">${label} · ${completed}/${data.habits.length} completed</div>${rows}`;
+}
 function weekHTML(){const ds=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d});return data.habits.length?`<div class="wk"><span></span>${ds.map(d=>`<b>${d.toLocaleDateString(undefined,{weekday:'narrow'})}</b>`).join('')}</div>`+data.habits.map(h=>`<div class="wk"><span class="item-title">${esc(h.name)}</span>${ds.map(d=>{const k=ymd(d),on=has(h.days,k);return `<button class="dot ${on?'on':''}" aria-pressed="${on}" aria-label="${esc(h.name)}, ${d.toLocaleDateString(undefined,{weekday:'long'})}" onclick="toggleHabit('${h.id}','${k}')"></button>`}).join('')}</div>`).join(''):'<div class="empty">Add a habit to see your week.</div>'}
 let focus=null;try{focus=JSON.parse(localStorage.getItem('pulse.focus'))}catch(e){}
 let focusSessions=[];try{focusSessions=JSON.parse(localStorage.getItem('pulse.focusSessions'))||[]}catch(e){}
