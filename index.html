@@ -275,8 +275,9 @@ if(document.activeElement!==noteSearch)renderNotes();renderNoteView();if($('glob
 const dueToday=sortT(data.tasks.filter(t=>!t.done&&t.due===day()));
 const doneTasks=data.tasks.filter(t=>t.done).length;
 const completedHabits=data.habits.filter(h=>has(h.days,day())).length;
-const dailyTotal=dueToday.length+data.habits.length;
-const dailyDone=data.tasks.filter(t=>t.done&&t.due===day()).length+completedHabits;
+const tasksScheduledToday=data.tasks.filter(t=>t.due===day());
+const dailyTotal=tasksScheduledToday.length+data.habits.length;
+const dailyDone=tasksScheduledToday.filter(t=>t.done).length+completedHabits;
 const dailyPct=dailyTotal?Math.round(dailyDone/dailyTotal*100):0;
 $('dashDueToday').textContent=dueToday.length;
 $('dashTasksDone').textContent=doneTasks;
