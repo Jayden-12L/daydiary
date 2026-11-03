@@ -206,6 +206,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
    <div class="metric"><div class="eyebrow">HABITS TODAY</div><div class="num" id="dashHabitsDone">0/0</div><div class="small">Habits checked off</div></div>
    <div class="metric"><div class="eyebrow">TODAY'S PROGRESS</div><div style="display:flex;align-items:center;gap:13px;margin-top:12px"><div id="dashProgressRing" role="img" aria-label="0 percent of today's tasks and habits completed" style="width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) 0%,var(--soft) 0%);flex:none"><div style="width:44px;height:44px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:13px;font-weight:750" id="dashRingNumber">0%</div></div><div><div class="num" id="dashProgressPercent" style="font-size:27px;margin:0">0%</div><div class="small" id="dashProgressSummary">Today's completion</div></div></div><div class="small" id="dashProgressDetail" style="margin-top:9px">Tasks and habits completed</div></div>
   </div>
+  <div class="panel daily-score-panel">
+   <div class="panel-head"><h2>Daily score</h2><span class="pill">Today</span></div>
+   <div class="daily-score-layout"><div class="daily-score-number" id="dailyScoreNumber">0</div><div class="daily-score-copy"><div class="daily-score-label" id="dailyScoreLabel">Getting started</div><p class="small" id="dailyScoreDetail">Complete habits and tasks scheduled for today to build your score.</p></div></div>
+   <div class="progressbar daily-score-bar"><i id="dailyScoreBar"></i></div>
+  </div>
   <div class="panel" id="dashTasksPanel">
    <div class="panel-head"><h2>Today's tasks</h2><button class="link" onclick="go('planner')">All tasks →</button></div>
    <div id="dashTodayTasks"></div>
@@ -320,11 +325,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
     <div class="metric"><div class="eyebrow">THIS WEEK</div><div class="num" id="focusWeek">0 min</div></div>
    </div>
   </div>
-  <div class="panel daily-score-panel">
-   <div class="panel-head"><h2>Daily score</h2><span class="pill">Today</span></div>
-   <div class="daily-score-layout"><div class="daily-score-number" id="dailyScoreNumber">0</div><div class="daily-score-copy"><div class="daily-score-label" id="dailyScoreLabel">Getting started</div><p class="small" id="dailyScoreDetail">Complete habits and tasks scheduled for today to build your score.</p></div></div>
-   <div class="progressbar daily-score-bar"><i id="dailyScoreBar"></i></div>
-  </div>
+
   <div class="panel">
    <div class="panel-head"><h2>Activity calendar</h2><div class="month-controls"><button class="secondary month-nav" onclick="shiftActivityMonth(-1)" aria-label="Previous month">‹</button><button class="secondary month-nav" onclick="shiftActivityMonth(1)" aria-label="Next month">›</button></div></div>
    <div class="month-title" id="activityMonthTitle"></div>
@@ -411,7 +412,6 @@ homeNotes.innerHTML=data.notes.length?sortN(data.notes).slice(0,3).map(n=>`<div 
 const tags=[...new Set(data.tasks.map(t=>t.tag).filter(Boolean))].sort(),tf=$('tagFilter'),cur=tf.value;tf.innerHTML='<option value="">All tags</option>'+tags.map(g=>`<option>${esc(g)}</option>`).join('');tf.value=tags.includes(cur)?cur:'';tf.classList.toggle('hidden',!tags.length);const shown=sortT(data.tasks.filter(t=>!tf.value||t.tag===tf.value));
 tasksList.innerHTML=shown.length?shown.map(taskHTML).join(''):'<div class="empty">No tasks yet. Add one above.</div>';
 const ft=$('focusTask'),fv=ft.value;ft.innerHTML='<option value="">No specific task</option>'+open.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');if(open.some(t=>t.id===fv))ft.value=fv;renderActivityCalendar();updateDailyScore();
-updateDailyScore();renderActivityCalendar();
 $('progressTaskTotal').textContent=data.tasks.length;
 $('progressTasksList').innerHTML=data.tasks.length?sortT(data.tasks).map(taskHTML).join(''):'<div class="empty">Your tasks will appear here. Add one in Planner.</div>';
 habitsList.innerHTML=data.habits.length?data.habits.map(h=>{const on=has(h.days,day()),st=streak(h);return `<div class="habit"><button class="check ${on?'done':''}" onclick="toggleHabit('${h.id}')" aria-pressed="${on}" aria-label="Done today: ${esc(h.name)}">${on?'✓':''}</button><div class="item-main"><div class="item-title">${esc(h.name)}</div><div class="item-meta">${st>1?st+'-day streak · ':''}${(h.days||[]).length} days completed</div></div><button class="delete" onclick="delHabit('${h.id}')" aria-label="Delete ${esc(h.name)}">×</button></div>`}).join(''):'<div class="empty">Add a habit to start tracking progress.</div>';
@@ -423,9 +423,10 @@ const tasksScheduledToday=data.tasks.filter(t=>taskDay(t)===day());
 const doneTodayTasks=tasksScheduledToday.filter(t=>t.done).length;
 const tasksTodayPct=tasksScheduledToday.length?Math.round(doneTodayTasks/tasksScheduledToday.length*100):0;
 const completedHabits=data.habits.filter(h=>has(h.days,day())).length;
-const dailyTotal=tasksScheduledToday.length+data.habits.length;
-const dailyDone=tasksScheduledToday.filter(t=>t.done).length+completedHabits;
-const dailyPct=dailyTotal?Math.round(dailyDone/dailyTotal*100):0;
+const dailyActivity=activityForDate(day());
+const dailyTotal=dailyActivity.total;
+const dailyDone=dailyActivity.completed;
+const dailyPct=dailyActivity.score;
 $('dashDueToday').textContent=dueToday.length;
 $('dashTasksDone').textContent=doneTodayTasks+'/'+tasksScheduledToday.length;
 $('dashTasksDoneLabel').textContent=tasksScheduledToday.length+' task'+(tasksScheduledToday.length===1?'':'s')+' scheduled today';
@@ -494,17 +495,21 @@ function activityForDate(date){
 }
 function updateDailyScore(){
  const a=activityForDate(day()),score=a.score;
- $('dailyScoreNumber').textContent=score;$('dailyScoreBar').style.width=score+'%';
- $('dailyScoreLabel').textContent=!a.total?'Nothing scheduled yet':score===100?'Excellent work':score>=80?'Great progress':score>=60?'Good momentum':score>=30?'Building momentum':'Getting started';
- $('dailyScoreDetail').textContent=a.total?a.completed+' of '+a.total+' scheduled items completed · '+a.completedHabits.length+' habits and '+a.completedTasks.length+' tasks':'Add habits or schedule tasks to start earning a daily score.';
+ const number=$('dailyScoreNumber'),bar=$('dailyScoreBar'),label=$('dailyScoreLabel'),detail=$('dailyScoreDetail');
+ if(number)number.textContent=score;
+ if(bar)bar.style.width=score+'%';
+ if(label)label.textContent=!a.total?'Nothing scheduled yet':score===100?'Excellent work':score>=80?'Great progress':score>=60?'Good momentum':score>=30?'Building momentum':'Getting started';
+ if(detail)detail.textContent=a.total?a.completed+' of '+a.total+' scheduled items completed · '+a.completedHabits.length+' habits and '+a.completedTasks.length+' tasks':'Add habits or schedule tasks to start earning a daily score.';
 }
 function shiftActivityMonth(delta){
  activityCalendarMonth=new Date(activityCalendarMonth.getFullYear(),activityCalendarMonth.getMonth()+delta,1);
  selectedActivityDate=ymd(activityCalendarMonth);renderActivityCalendar();
 }
 function renderActivityCalendar(){
+ const grid=$('activityMonthGrid'),title=$('activityMonthTitle');
+ if(!grid||!title)return;
  const y=activityCalendarMonth.getFullYear(),m=activityCalendarMonth.getMonth(),first=new Date(y,m,1),daysInMonth=new Date(y,m+1,0).getDate(),offset=first.getDay();
- $('activityMonthTitle').textContent=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+ title.textContent=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
  let html=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>'<div class="month-weekday">'+x+'</div>').join('');
  for(let i=0;i<offset;i++)html+='<div aria-hidden="true"></div>';
  for(let n=1;n<=daysInMonth;n++){
@@ -512,7 +517,7 @@ function renderActivityCalendar(){
   const future=date>day(),selected=date===selectedActivityDate,today=date===day();
   html+=`<button class="month-cell heat-${level} ${selected?'selected':''} ${today?'today':''}" onclick="selectActivityDate('${date}')" ${future?'disabled':''} aria-pressed="${selected}" aria-label="${new Date(date+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}: ${a.score} percent, ${a.completed} of ${a.total} items completed"><span class="month-day">${n}</span><span class="month-count">${a.total?a.completed+'/'+a.total:'—'}</span></button>`;
  }
- $('activityMonthGrid').innerHTML=html;renderActivityDayDetails();
+ grid.innerHTML=html;renderActivityDayDetails();
 }
 function selectActivityDate(date){selectedActivityDate=date;renderActivityCalendar()}
 function renderActivityDayDetails(){
@@ -622,25 +627,44 @@ function tick(){
 function checkReminders(){const d=day(),n=new Date(),hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'),due=data.tasks.filter(t=>!t.done&&!t.notified&&t.time&&t.due&&(t.due<d||(t.due===d&&t.time<=hm)));if(!due.length)return;due.forEach(t=>t.notified=true);save();const m=due.length>1?due.length+' tasks are due':'Due now: '+due[0].title;toast(m);notify(m)}
 const SB='https://pmawzarzgfgynqkallut.supabase.co',KEY='sb_publishable_Aiw1KhVemVc-9FpRHy2NNA__8DDgjZT';
 let sync=(()=>{try{return JSON.parse(localStorage.getItem('pulse.sync'))||{}}catch(e){return{}}})(),busy=false;
-const saveSync=()=>{try{localStorage.setItem('pulse.sync',JSON.stringify(sync))}catch(e){}},syncMsg=t=>{$('syncMsg').textContent=t};
+const saveSync=()=>{try{localStorage.setItem('pulse.sync',JSON.stringify(sync))}catch(e){}},syncMsg=t=>{const el=$('syncMsg');if(el)el.textContent=String(t)};
 const norm=d=>({notes:Array.isArray(d&&d.notes)?d.notes:[],tasks:Array.isArray(d&&d.tasks)?d.tasks:[],habits:Array.isArray(d&&d.habits)?d.habits:[]});
 async function sb(path,o={},auth=true){if(auth)await freshToken();const r=await fetch(SB+path,{...o,headers:{apikey:KEY,'Content-Type':'application/json',...(auth&&sync.token?{Authorization:'Bearer '+sync.token}:{}),...o.headers}}),j=await r.json().catch(()=>null);if(!r.ok)throw new Error((j&&(j.msg||j.error_description||j.message))||'Request failed ('+r.status+')');return j}
 function setSession(j){sync.token=j.access_token;sync.refresh=j.refresh_token;sync.exp=j.expires_at||Math.floor(Date.now()/1000)+j.expires_in;sync.uid=j.user.id;sync.email=j.user.email;saveSync()}
-async function freshToken(){if(sync.token&&sync.exp-60>Date.now()/1000)return;if(!sync.refresh)throw new Error('Signed out.');try{setSession(await sb('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:sync.refresh})},false))}catch(e){sync={};saveSync();syncUI();throw new Error('Please sign in again.')}}
+let refreshPromise=null;
+async function freshToken(){
+ if(sync.token&&Number(sync.exp)-60>Date.now()/1000)return;
+ if(!sync.refresh)throw new Error('Signed out.');
+ if(!refreshPromise){
+  const refreshToken=sync.refresh;
+  refreshPromise=(async()=>{
+   try{setSession(await sb('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:refreshToken})},false))}
+   catch(e){
+    const msg=String(e&&e.message||e).toLowerCase();
+    if(msg.includes('invalid refresh token')||msg.includes('invalid_grant')||msg.includes('refresh_token_not_found')){
+     sync={};saveSync();syncUI();
+     throw new Error('Your sign-in session expired. Please sign in again.');
+    }
+    throw e;
+   }
+  })();
+ }
+ try{await refreshPromise}finally{refreshPromise=null}
+}
 function merge(a,b){const o=norm(a),x=norm(b),un=(p,q,k)=>{const s=new Set(p.map(k));return p.concat(q.filter(i=>!s.has(k(i))))},hn=h=>String(h.name).toLowerCase(),habits=un(o.habits,x.habits,hn);habits.forEach(h=>{const m=x.habits.find(y=>hn(y)===hn(h));if(m)h.days=[...new Set([...(h.days||[]),...(m.days||[])])]});return{notes:un(o.notes,x.notes,n=>n.title+'\n'+n.body),tasks:un(o.tasks,x.tasks,t=>t.title+'|'+(t.due||'')),habits}}
 async function push(){const ts=Date.now();await sb('/rest/v1/pulse_data',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({user_id:sync.uid,data,updated_at:new Date(ts).toISOString()})});sync.last=ts;sync.dirty=false;saveSync()}
 async function syncNow(){if(!sync.refresh||busy)return;busy=true;try{const row=(await sb('/rest/v1/pulse_data?select=data,updated_at&user_id=eq.'+sync.uid))[0],rt=row?Date.parse(row.updated_at):0;if(!row)await push();else if(!sync.last||(rt>sync.last&&sync.dirty)){data=merge(row.data,data);persist();await push()}else if(rt>sync.last){data=norm(row.data);persist();sync.last=rt;saveSync()}else if(sync.dirty)await push();render();syncMsg('Synced at '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}))}catch(e){syncMsg(e.message)}busy=false}
 async function authGo(mode){const email=$('syEmail').value.trim(),pw=$('syPass').value;if(!email||pw.length<6){syncMsg('Enter your email and a password of at least 6 characters.');return}syncMsg('Working…');try{const j=await sb(mode==='up'?'/auth/v1/signup':'/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password:pw})},false);if(!j.access_token){syncMsg('Check your email to confirm your account, then sign in.');return}sync={};setSession(j);$('syPass').value='';syncUI();await syncNow()}catch(e){syncMsg(e.message)}}
 function signOut(){sync={};saveSync();syncUI();syncMsg('Signed out. Your data stays on this device.')}
 
-function syncUI(){const on=!!sync.refresh;$('syncOut').classList.toggle('hidden',on);$('syncIn').classList.toggle('hidden',!on);if(on)$('syncWho').textContent='Signed in as '+sync.email}
+function syncUI(){const on=!!sync.refresh,out=$('syncOut'),inside=$('syncIn'),who=$('syncWho');if(out)out.classList.toggle('hidden',on);if(inside)inside.classList.toggle('hidden',!on);if(on&&who)who.textContent='Signed in as '+(sync.email||'your account')}
 let viewId=null;
 function openNote(id){go('notes');viewId=id;renderNoteView()}
 function renderNoteView(){const n=viewId&&data.notes.find(x=>x.id===viewId);if(viewId&&!n)viewId=null;const v=!!n;['noteForm','noteSearch','notesPanel'].forEach(i=>$(i).classList.toggle('hidden',v));$('noteView').classList.toggle('hidden',!v);if(v)$('noteView').innerHTML=`<div class="note-title" style="font-size:20px;overflow-wrap:anywhere">${esc(n.title)}</div><div class="item-meta">${n.pin?'Pinned · ':''}${new Date(n.date).toLocaleDateString()}${n.edited?' · edited':''}</div><div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5;margin:16px 0">${n.body?esc(n.body):'<span class="small">No text in this note.</span>'}</div><div class="addrow" style="flex-wrap:wrap;margin-bottom:0"><button class="secondary" onclick="go('notes')">All notes</button><button class="secondary" onclick="editNote('${n.id}')">Edit</button><button class="secondary" onclick="pinNote('${n.id}')">${n.pin?'Unpin':'Pin'}</button><button class="secondary" onclick="delNote('${n.id}')">Delete</button></div>`}
 Object.assign(window,{shiftActivityMonth,selectActivityDate,go,addNote,editNote,cancelEdit,delNote,renderNotes,renderSearch,addTask,toggleTask,delTask,addHabit,toggleHabit,delHabit,askPreset,ask,exportData,importData,toggleTheme,pinNote,startFocus,startCustomFocus,pauseFocus,resumeFocus,dismissFocusComplete,stopFocus,authGo,signOut,syncNow,openNote});
 [[noteTitle,'Note title'],[noteBody,'Note text'],[noteSearch,'Search notes'],[taskInput,'New task'],[habitInput,'New habit'],[prompt,'Ask DAYDIARY']].forEach(([el,l])=>el.setAttribute('aria-label',l));answer.setAttribute('role','status');
 document.querySelector('.tab.active').setAttribute('aria-current','page');setTheme(document.documentElement.dataset.theme||'light');applyCustomization();
-const now=new Date();updateGreeting();today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});$('journalDate').value=day();render();let savedView='home';try{const candidate=localStorage.getItem('pulse.lastView');if(candidate&&document.getElementById(candidate)?.classList.contains('view'))savedView=candidate}catch(e){}if(savedView!=='home')go(savedView);loadJournalDate();renderJournalHistory();
+const now=new Date();updateGreeting();today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});$('journalDate').value=day();render();renderActivityCalendar();updateDailyScore();let savedView='home';try{const candidate=localStorage.getItem('pulse.lastView');if(candidate&&document.getElementById(candidate)?.classList.contains('view'))savedView=candidate}catch(e){}if(savedView!=='home')go(savedView);loadJournalDate();renderJournalHistory();
 try{localStorage.setItem('__pulse_test__','1');localStorage.removeItem('__pulse_test__')}catch(e){const s=$('runtimeStatus');s.textContent='Saving isn’t available in this browser, so changes will be lost when you close the page.';s.classList.remove('hidden')}
 $('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});$('habitInput').addEventListener('keydown',e=>{if(e.key==='Enter')addHabit()});$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter')ask()});
 setQuote();renderFocus();setInterval(tick,1000);document.addEventListener('visibilitychange',()=>{tick();setQuote()});syncUI();syncNow();setInterval(syncNow,60000);window.addEventListener('online',syncNow);document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncNow()});$('syPass').addEventListener('keydown',e=>{if(e.key==='Enter')authGo('in')});if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
