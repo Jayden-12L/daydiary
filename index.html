@@ -341,6 +341,7 @@ function saveCustomization(){try{localStorage.setItem('daydiary.customization',J
 function applyCustomization(){
  const color=/^#[0-9a-f]{6}$/i.test(customization.accent||'')?customization.accent:'#26966b';
  document.documentElement.style.setProperty('--custom-accent',color);
+ document.documentElement.style.setProperty('--green',color);
  document.body.classList.toggle('compact-layout',customization.layout==='compact');
  document.querySelectorAll('.accent-swatch').forEach(b=>{const active=b.dataset.color===color;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
  if($('displayName'))$('displayName').value=customization.name||'';
