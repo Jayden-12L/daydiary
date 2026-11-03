@@ -28,7 +28,7 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
 .global-search-result span{display:block;color:var(--muted);font-size:12px;line-height:1.45;margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere}
 
 .journal-history-date{display:block;font-size:13px;font-weight:700}
-.journal-history-mood{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.journal-history-mood{display:block;color:var(--muted);font-size:11px;margin-top:3px}.journal-rating{display:block;width:100%;height:24px;margin:0;accent-color:var(--green);cursor:grab;touch-action:pan-y}.journal-rating:active{cursor:grabbing}
 .journal-history-body{display:block;font-size:13px;color:var(--muted);margin-top:5px;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 
 
@@ -235,6 +235,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
    <p class="small" style="margin:-5px 0 15px">Make DAYDIARY feel a little more like yours.</p>
    <div class="small" style="font-weight:650;margin-bottom:9px">Accent color</div>
    <div class="accent-swatches" role="group" aria-label="Choose an accent color">
+    <button class="accent-swatch" type="button" data-neutral="true" style="--swatch:linear-gradient(135deg,#17181c 0 50%,#f5f5f7 50% 100%)" aria-label="Neutral black and white" title="Neutral black and white" onclick="setNeutralAccent()"></button>
     <button class="accent-swatch" type="button" data-color="#26966b" style="--swatch:#26966b" aria-label="Green" title="Green" onclick="setAccent('#26966b')"></button>
     <button class="accent-swatch" type="button" data-color="#3478f6" style="--swatch:#3478f6" aria-label="Blue" title="Blue" onclick="setAccent('#3478f6')"></button>
     <button class="accent-swatch" type="button" data-color="#8b5cf6" style="--swatch:#8b5cf6" aria-label="Purple" title="Purple" onclick="setAccent('#8b5cf6')"></button>
@@ -273,7 +274,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
    <select class="field" id="journalMood" style="margin-bottom:14px">
     <option value="">Choose a mood (optional)</option><option value="Great">Great</option><option value="Good">Good</option><option value="Okay">Okay</option><option value="Tired">Tired</option><option value="Stressed">Stressed</option><option value="Sad">Sad</option><option value="Excited">Excited</option>
    </select>
-   <div class="panel-head" style="margin-bottom:8px"><label class="small" for="journalBody">Your thoughts</label><button class="link" onclick="journalPrompt()">Give me a prompt ↗</button></div>
+   <div style="margin:2px 0 18px"><div class="panel-head" style="margin-bottom:9px"><label class="small" for="journalRating">Rate your day</label><span class="pill" id="journalRatingValue">5 / 10</span></div><input class="journal-rating" id="journalRating" type="range" min="1" max="10" step="1" value="5" oninput="updateJournalRating()" aria-label="Rate your day from 1 to 10"><div class="small" style="display:flex;justify-content:space-between;margin-top:5px"><span>Not great</span><span>Excellent</span></div></div>
+    <div class="panel-head" style="margin-bottom:8px"><label class="small" for="journalBody">Your thoughts</label><button class="link" onclick="journalPrompt()">Give me a prompt ↗</button></div>
    <div class="suggestion" id="journalPromptText" style="margin:0 0 12px">What was one good moment from today?</div>
    <textarea class="field" id="journalBody" rows="8" placeholder="Write whatever is on your mind..." oninput="updateJournalWordCount()"></textarea>
    <div class="addrow" style="justify-content:space-between;align-items:center"><span class="small" id="journalSaveStatus">Your entries stay in DAYDIARY.</span><button class="primary" onclick="saveJournalEntry()">Save entry</button></div>
@@ -371,7 +373,7 @@ try{data=JSON.parse(localStorage.getItem(key))||{journal:[],notes:[{id:makeId(),
 const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const day=()=>ymd(new Date()),isDay=s=>/^\d{4}-\d\d-\d\d$/.test(s),has=(a,d)=>(a||[]).includes(d);
 ['notes','tasks','habits','journal'].forEach(k=>{if(!Array.isArray(data[k]))data[k]=[]});
-data.journal=data.journal.filter(e=>e&&isDay(e.date)).map(e=>({id:e.id||makeId(),date:e.date,body:String(e.body||''),mood:String(e.mood||''),updated:+e.updated||Date.now()}));
+data.journal=data.journal.filter(e=>e&&isDay(e.date)).map(e=>({id:e.id||makeId(),date:e.date,body:String(e.body||''),mood:String(e.mood||''),rating:Number.isInteger(+e.rating)&&+e.rating>=1&&+e.rating<=10?+e.rating:null,updated:+e.updated||Date.now()}));
 const sortT=a=>[...a].sort((x,y)=>(!!x.done-!!y.done)||(x.due||'9999').localeCompare(y.due||'9999')||((y.pri||0)-(x.pri||0))),sortN=a=>[...a].sort((x,y)=>!!y.pin-!!x.pin);
 function streak(h){const s=new Set(h.days||[]),schedule=h.schedule||'daily',days=h.scheduleDays||[],isScheduled=d=>schedule==='daily'||schedule==='weekdays'&&d.getDay()>=1&&d.getDay()<=5||schedule==='weekends'&&(d.getDay()===0||d.getDay()===6)||schedule==='custom'&&days.includes(d.getDay());let d=new Date();if(!s.has(ymd(d))&&isScheduled(d))d.setDate(d.getDate()-1);let n=0,guard=0;while(guard++<370){if(s.has(ymd(d)))n++;else if(isScheduled(d))break;d.setDate(d.getDate()-1)}return n}
 function persist(){try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}}
@@ -437,26 +439,28 @@ const upcoming=sortT(data.tasks.filter(t=>!t.done&&t.due&&t.due>day())).filter(t
 $('dashUpcoming').innerHTML=upcoming.length?upcoming.map(t=>'<div class="task"><div class="item-main"><div class="item-title">'+esc(t.title)+'</div><div class="task-date">'+new Date(t.due+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})+'</div></div></div>').join(''):'<div class="empty">No upcoming deadlines in the next 7 days.</div>';
 }
 function exportData(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='daydiary-backup-'+day()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Backup downloaded')}
-function importData(e){const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!['notes','tasks','habits'].every(k=>Array.isArray(d[k]))||(d.journal!==undefined&&!Array.isArray(d.journal)))throw 0;if(!confirm('Replace everything in DAYDIARY with this backup?'))return;data={journal:(d.journal||[]).filter(e=>e&&isDay(e.date)).map(e=>({id:makeId(),date:e.date,body:String(e.body||''),mood:String(e.mood||''),updated:+e.updated||Date.now()})),notes:d.notes.map(n=>({id:makeId(),title:String(n.title||''),body:String(n.body||''),date:+n.date||Date.now(),edited:n.edited?+n.edited:undefined,pin:!!n.pin})),tasks:d.tasks.map(t=>({id:makeId(),title:String(t.title||''),due:isDay(t.due)?t.due:'',done:!!t.done,pri:[1,2,3].includes(+t.pri)?+t.pri:0,rep:['daily','weekly','monthly'].includes(t.rep)?t.rep:'',tag:String(t.tag||'').slice(0,20),time:/^\d\d:\d\d$/.test(t.time)?t.time:''})),habits:d.habits.map(h=>({id:makeId(),name:String(h.name||''),days:Array.isArray(h.days)?h.days.filter(isDay):[]}))};save();toast('Backup imported')}catch(_){toast('That file isn’t a DAYDIARY backup.')}};r.readAsText(f)}
+function importData(e){const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!['notes','tasks','habits'].every(k=>Array.isArray(d[k]))||(d.journal!==undefined&&!Array.isArray(d.journal)))throw 0;if(!confirm('Replace everything in DAYDIARY with this backup?'))return;data={journal:(d.journal||[]).filter(e=>e&&isDay(e.date)).map(e=>({id:makeId(),date:e.date,body:String(e.body||''),mood:String(e.mood||''),rating:Number.isInteger(+e.rating)&&+e.rating>=1&&+e.rating<=10?+e.rating:null,updated:+e.updated||Date.now()})),notes:d.notes.map(n=>({id:makeId(),title:String(n.title||''),body:String(n.body||''),date:+n.date||Date.now(),edited:n.edited?+n.edited:undefined,pin:!!n.pin})),tasks:d.tasks.map(t=>({id:makeId(),title:String(t.title||''),due:isDay(t.due)?t.due:'',done:!!t.done,pri:[1,2,3].includes(+t.pri)?+t.pri:0,rep:['daily','weekly','monthly'].includes(t.rep)?t.rep:'',tag:String(t.tag||'').slice(0,20),time:/^\d\d:\d\d$/.test(t.time)?t.time:''})),habits:d.habits.map(h=>({id:makeId(),name:String(h.name||''),days:Array.isArray(h.days)?h.days.filter(isDay):[]}))};save();toast('Backup imported')}catch(_){toast('That file isn’t a DAYDIARY backup.')}};r.readAsText(f)}
 
 let customization=(()=>{try{return JSON.parse(localStorage.getItem('daydiary.customization'))||{}}catch(e){return{}}})();
 function saveCustomization(){try{localStorage.setItem('daydiary.customization',JSON.stringify(customization))}catch(e){}}
 function applyCustomization(){
- const color=/^#[0-9a-f]{6}$/i.test(customization.accent||'')?customization.accent:'#26966b';
+ const neutral=customization.accentMode==='neutral';
+ const color=neutral?(document.documentElement.dataset.theme==='dark'?'#f1f1f4':'#202127'):(/^#[0-9a-f]{6}$/i.test(customization.accent||'')?customization.accent:'#26966b');
  document.documentElement.style.setProperty('--custom-accent',color);
  document.documentElement.style.setProperty('--green',color);
  document.body.classList.toggle('compact-layout',customization.layout==='compact');
- document.querySelectorAll('.accent-swatch').forEach(b=>{const active=b.dataset.color===color;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+ document.querySelectorAll('.accent-swatch').forEach(b=>{const active=b.dataset.neutral==='true'?neutral:!neutral&&b.dataset.color===color;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
  if($('displayName'))$('displayName').value=customization.name||'';
  if($('layoutDensity'))$('layoutDensity').value=customization.layout==='compact'?'compact':'comfortable';
  updateGreeting();
 }
-function setAccent(color){if(!/^#[0-9a-f]{6}$/i.test(color))return;customization.accent=color;saveCustomization();applyCustomization()}
+function setAccent(color){if(!/^#[0-9a-f]{6}$/i.test(color))return;customization.accent=color;customization.accentMode='color';saveCustomization();applyCustomization()}
+function setNeutralAccent(){customization.accentMode='neutral';saveCustomization();applyCustomization()}
 function saveDisplayName(){customization.name=($('displayName').value||'').trim().slice(0,24);saveCustomization();updateGreeting();toast(customization.name?'Greeting updated.':'Name cleared.')}
 function setLayout(value){customization.layout=value==='compact'?'compact':'comfortable';saveCustomization();applyCustomization()}
 function resetCustomization(){customization={};saveCustomization();applyCustomization();toast('Appearance settings reset.')}
 function updateGreeting(){const h=new Date().getHours(),g=h<12?'Good morning':h<17?'Good afternoon':'Good evening',name=(customization.name||'').trim();$('greeting').textContent=g+(name?', '+name:'')+'.'}
-function setTheme(t){document.documentElement.dataset.theme=t;const dark=t==='dark';$('themeBtn').innerHTML=dark?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/></svg>';$('themeBtn').setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');$('themeBtn').title=dark?'Switch to light mode':'Switch to dark mode';document.querySelector('meta[name=theme-color]').content=dark?'#0f1013':'#f5f5f7'}
+function setTheme(t){document.documentElement.dataset.theme=t;applyCustomization();const dark=t==='dark';$('themeBtn').innerHTML=dark?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/></svg>';$('themeBtn').setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');$('themeBtn').title=dark?'Switch to light mode':'Switch to dark mode';document.querySelector('meta[name=theme-color]').content=dark?'#0f1013':'#f5f5f7'}
 function toggleTheme(){const t=document.documentElement.dataset.theme==='dark'?'light':'dark';setTheme(t);try{localStorage.setItem('pulse.theme',t)}catch(e){}}
 const QUOTES=['Small steps, repeated daily, beat big plans left for later.','Start with the next small thing.','You don’t need more time, just a clear first step.','Done is a good place to begin.','Rest is part of the plan, not a break from it.','Make it easy to start and hard to skip.','One focused hour can change a whole day.','Progress rarely feels dramatic while it’s happening.','Decide what matters, then protect it.','A messy start still counts.','Consistency is quiet, and it adds up.','Do the hard thing first, while it’s still small.','Your future self will thank you for ten minutes today.','Clear your head by writing it down.','Write it down so your mind can rest.','Today is a good day to finish something small.','Enough effort, repeated, becomes a habit.','Slow progress is still progress.','Choose one thing and give it your full attention.','Begin before you feel ready.','Tidy the small things and the big ones get lighter.','Notice what went well today.','A short walk can fix a long afternoon.','Plan lightly, then follow through.','What you do most days matters more than what you do once.','Ask what the next step is, not what the whole path is.','Protect your mornings and your evenings will thank you.','Take the pressure off and keep the habit.','Good days are built from ordinary hours.','You can pause without quitting.','Make tomorrow easier before you go to bed.','Be kind to yourself and keep going.','Finish one task before you open another.','Your attention is worth guarding.','Look back at how far you’ve come this week.','Keep your promises to yourself.','Less rushing, more doing.','A clear list makes a quieter mind.','Some days the win is simply showing up.','Turn the big goal into a ten-minute start.','Rest, then return with fresh eyes.','Little by little is still a lot.','Say no to something so you can say yes to what matters.','Today counts, even if it’s ordinary.','Keep the streak, but don’t fear breaking it.'];
 function setQuote(){$('quote').textContent=QUOTES[Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5)%QUOTES.length]}
@@ -513,18 +517,21 @@ const journalPrompts=[
 ];
 function journalPrompt(){const current=$('journalPromptText').textContent,choices=journalPrompts.filter(p=>p!==current);$('journalPromptText').textContent=choices[Math.floor(Math.random()*choices.length)]}
 function updateJournalWordCount(){const n=$('journalBody').value.trim().split(/\\s+/).filter(Boolean).length;$('journalWordCount').textContent=n+' word'+(n===1?'':'s')}
+function updateJournalRating(){$('journalRatingValue').textContent=$('journalRating').value+' / 10'}
 function loadJournalDate(){
  const date=$('journalDate').value||day(),entry=data.journal.find(e=>e.date===date);
  $('journalEditorTitle').textContent=date===day()?"Today's entry":new Date(date+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'});
  $('journalMood').value=entry?entry.mood:'';
+  $('journalRating').value=entry&&entry.rating?entry.rating:5;
+  updateJournalRating();
  $('journalBody').value=entry?entry.body:'';
  $('journalSaveStatus').textContent=entry?'Saved '+new Date(entry.updated).toLocaleString():'Not saved yet';
  updateJournalWordCount();
 }
 function saveJournalEntry(){
- const date=$('journalDate').value||day(),body=$('journalBody').value.trim(),mood=$('journalMood').value,index=data.journal.findIndex(e=>e.date===date);
- if(!body&&!mood){if(index>=0){data.journal.splice(index,1);save();loadJournalDate();renderJournalHistory();toast('Journal entry deleted');return}toast('Write something or choose a mood first.');return}
- const entry={id:index>=0?data.journal[index].id:makeId(),date,body,mood,updated:Date.now()};
+ const date=$('journalDate').value||day(),body=$('journalBody').value.trim(),mood=$('journalMood').value,rating=+$('journalRating').value,index=data.journal.findIndex(e=>e.date===date);
+ if(!body&&!mood&&rating===5){if(index>=0){data.journal.splice(index,1);save();loadJournalDate();renderJournalHistory();toast('Journal entry deleted');return}toast('Write something, choose a mood, or rate your day first.');return}
+ const entry={id:index>=0?data.journal[index].id:makeId(),date,body,mood,rating,updated:Date.now()};
  if(index>=0)data.journal[index]=entry;else data.journal.push(entry);
  save();loadJournalDate();renderJournalHistory();toast('Journal entry saved');
 }
@@ -532,7 +539,7 @@ function selectJournalDate(date){$('journalDate').value=date;loadJournalDate()}
 function renderJournalHistory(){
  const q=($('journalSearch').value||'').trim().toLowerCase(),entries=[...data.journal].filter(e=>(e.body+' '+e.mood+' '+e.date).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
  $('journalEntryCount').textContent=entries.length+' entr'+(entries.length===1?'y':'ies');
- $('journalHistory').innerHTML=entries.length?entries.map(e=>`<button class="journal-history-item" onclick="selectJournalDate('${e.date}')"><span class="journal-history-date">${new Date(e.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</span><span class="journal-history-mood">${e.mood?esc(e.mood)+' · ':''}</span><span class="journal-history-body">${esc(e.body||'Mood check-in')}</span></button>`).join(''):'<div class="empty">'+(q?'No entries match your search.':'Your saved entries will appear here.')+'</div>';
+ $('journalHistory').innerHTML=entries.length?entries.map(e=>`<button class="journal-history-item" onclick="selectJournalDate('${e.date}')"><span class="journal-history-date">${new Date(e.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</span><span class="journal-history-mood">${[e.mood,e.rating?'Rating: '+e.rating+'/10':''].filter(Boolean).map(esc).join(' · ')}</span><span class="journal-history-body">${esc(e.body||'Mood check-in')}</span></button>`).join(''):'<div class="empty">'+(q?'No entries match your search.':'Your saved entries will appear here.')+'</div>';
 }
 
 function renderSearch(){
