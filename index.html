@@ -78,6 +78,15 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
   <p class="greeting" id="greeting" style="font-size:clamp(24px,4vw,32px);letter-spacing:-1px;margin:0 0 8px">Good day.</p>
   <p class="sub">A little more organized. A little more in sync.</p>
   <div id="quote" style="background:var(--soft);border-radius:16px;padding:15px 17px;font-size:15px;line-height:1.5;margin:-8px 0 20px"></div>
+  <div class="panel" id="dailyHighlightPanel">
+   <div class="panel-head"><h2>Daily Highlight</h2><span class="pill" id="highlightDateLabel">Today</span></div>
+   <p class="small" style="margin:0 0 12px">What's the one thing you really want to get done today?</p>
+   <div class="addrow" style="margin:0;align-items:center">
+    <input class="field" id="dailyHighlightInput" maxlength="120" placeholder="Set your main goal..." aria-label="Today's main priority" onkeydown="if(event.key==='Enter')saveDailyHighlight()">
+    <button class="primary" id="dailyHighlightSave" onclick="saveDailyHighlight()">Save</button>
+   </div>
+   <div id="dailyHighlightStatus" class="small" style="margin-top:12px">One priority. One day.</div>
+  </div>
   <div class="metrics">
    <div class="metric"><div class="eyebrow">DUE TODAY</div><div class="num" id="dashDueToday">0</div><div class="small">Tasks on today's list</div></div>
    <div class="metric"><div class="eyebrow">TASKS COMPLETED</div><div class="num" id="dashTasksDone">0</div><div class="small">Completed overall</div></div>
@@ -240,6 +249,33 @@ const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+Stri
 const day=()=>ymd(new Date()),isDay=s=>/^\d{4}-\d\d-\d\d$/.test(s),has=(a,d)=>(a||[]).includes(d);
 ['notes','tasks','habits','journal'].forEach(k=>{if(!Array.isArray(data[k]))data[k]=[]});
 data.journal=data.journal.filter(e=>e&&isDay(e.date)).map(e=>({id:e.id||makeId(),date:e.date,body:String(e.body||''),mood:String(e.mood||''),updated:+e.updated||Date.now()}));
+let dailyHighlights={};
+try{dailyHighlights=JSON.parse(localStorage.getItem('daydiary.highlights'))||{}}catch(e){}
+if(!dailyHighlights||typeof dailyHighlights!=='object'||Array.isArray(dailyHighlights))dailyHighlights={};
+function saveDailyHighlight(){
+ const input=$('dailyHighlightInput'),goal=input.value.trim(),key=day();
+ if(!goal){input.focus();toast('Add a priority first.');return}
+ const previous=dailyHighlights[key]||{};
+ dailyHighlights[key]={text:goal,done:!!previous.done};
+ try{localStorage.setItem('daydiary.highlights',JSON.stringify(dailyHighlights))}catch(e){}
+ renderDailyHighlight();toast('Daily highlight saved.');
+}
+function toggleDailyHighlight(){
+ const key=day(),entry=dailyHighlights[key];
+ if(!entry||!entry.text)return;
+ entry.done=!entry.done;
+ try{localStorage.setItem('daydiary.highlights',JSON.stringify(dailyHighlights))}catch(e){}
+ renderDailyHighlight();
+}
+function renderDailyHighlight(){
+ const key=day(),entry=dailyHighlights[key]||{text:'',done:false},input=$('dailyHighlightInput');
+ if(document.activeElement!==input)input.value=entry.text||'';
+ $('highlightDateLabel').textContent=new Date(key+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
+ $('dailyHighlightStatus').innerHTML=entry.text
+  ? '<div style="display:flex;align-items:center;gap:10px"><button class="check '+(entry.done?'done':'')+'" onclick="toggleDailyHighlight()" aria-pressed="'+!!entry.done+'" aria-label="'+(entry.done?'Mark priority incomplete':'Mark priority complete')+'">'+(entry.done?'✓':'')+'</button><span class="'+(entry.done?'done-text':'')+'" style="font-weight:650;flex:1">'+esc(entry.text)+'</span><span class="small">'+(entry.done?'Completed':'Your main priority')+'</span></div>'
+  : 'One priority. One day.';
+}
+
 const sortT=a=>[...a].sort((x,y)=>(!!x.done-!!y.done)||(x.due||'9999').localeCompare(y.due||'9999')||((y.pri||0)-(x.pri||0))),sortN=a=>[...a].sort((x,y)=>!!y.pin-!!x.pin);
 function streak(h){const s=new Set(h.days||[]),d=new Date();if(!s.has(ymd(d)))d.setDate(d.getDate()-1);let n=0;while(s.has(ymd(d))){n++;d.setDate(d.getDate()-1)}return n}
 function persist(){try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}}
@@ -292,6 +328,7 @@ $('dashTodayTasks').innerHTML=dueToday.length?dueToday.map(taskHTML).join(''):'<
 $('dashStreaks').innerHTML=data.habits.length?data.habits.map(h=>{const n=streak(h),on=has(h.days,day());return '<div class="habit"><button class="check '+(on?'done':'')+'" onclick="toggleHabit(\''+h.id+'\')" aria-pressed="'+on+'" aria-label="Done today: '+esc(h.name)+'">'+(on?'✓':'')+'</button><div class="item-main"><div class="item-title">'+esc(h.name)+'</div><div class="item-meta">'+(n?n+' day streak':'Start a streak today')+' · '+(h.days||[]).length+' total days</div></div></div>'}).join(''):'<div class="empty">Add your first habit in Progress.</div>';
 const upcoming=sortT(data.tasks.filter(t=>!t.done&&t.due&&t.due>day())).filter(t=>{const d=new Date(t.due+'T12:00:00'),now=new Date();const limit=new Date();limit.setDate(limit.getDate()+7);return d<=limit}).slice(0,5);
 $('dashUpcoming').innerHTML=upcoming.length?upcoming.map(t=>'<div class="task"><div class="item-main"><div class="item-title">'+esc(t.title)+'</div><div class="task-date">'+new Date(t.due+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})+'</div></div></div>').join(''):'<div class="empty">No upcoming deadlines in the next 7 days.</div>';
+renderDailyHighlight();
 }
 function askPreset(s){prompt.value=s;ask()}
 function ask(){const q=prompt.value.trim().toLowerCase();if(!q)return;const open=sortT(data.tasks.filter(t=>!t.done)),od=open.filter(t=>t.due&&t.due<day()),left=data.habits.filter(h=>!has(h.days,day())),best=Math.max(0,...data.habits.map(streak)),t=re=>re.test(q);let r;
