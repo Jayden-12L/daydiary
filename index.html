@@ -221,7 +221,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
    <div id="dashStreaks"></div>
   </div>
   <div class="panel" id="dashUpcomingPanel">
-   <div class="panel-head"><h2>Coming up</h2><button class="link" onclick="go('planner')">Planner →</button></div>
+   <div class="panel-head"><h2>Coming up</h2><button class="link" onclick="go('planner')">New Events →</button></div>
    <div id="dashUpcoming"></div>
   </div>
   <div class="panel" id="dashQuickPanel"><div class="panel-head"><h2>Quick actions</h2></div><div class="quickgrid">
@@ -335,26 +335,18 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
    <p class="small activity-legend-copy">Color intensity reflects the share of scheduled habits and tasks completed that day.</p>
    <div class="selected-day" id="activityDayDetails"></div>
   </div>
-  <div class="panel"><div class="panel-head"><h2>Your habits</h2></div><div class="addrow"><input id="habitInput" class="field" placeholder="Add a habit"><button class="primary" onclick="addHabit()">Add</button></div><div id="habitsList"></div></div>
+  <div class="panel"><div class="panel-head"><h2>Your habits</h2></div><div id="habitsList"></div></div>
   <div class="panel"><div class="panel-head"><h2>Your tasks</h2><span class="pill" id="progressTaskTotal">0</span></div><div id="progressTasksList"></div></div>
   
   </section>
- <section id="planner" class="view"><h1 class="page-title">Planner</h1><p class="page-sub">Get it out of your head and onto your list.</p>
+ <section id="planner" class="view"><h1 class="page-title">New Events</h1><p class="page-sub">Add tasks and keep track of what’s coming up.</p>
   <div class="panel"><div class="panel-head"><h2>New task</h2></div><div class="addrow"><input id="taskInput" class="field" placeholder="What needs to get done?"><button class="primary" onclick="addTask()">Add</button></div><div class="task-schedule"><label class="task-control"><span>Date</span><input id="taskDate" class="field task-date-input" type="date" aria-label="Date"></label><label class="task-control"><span>Time</span><input id="taskTime" class="field task-time-input" type="time" aria-label="Time"></label></div><div class="addrow"><select id="taskPri" class="field" aria-label="Priority"><option value="0">No priority</option><option value="1">Low</option><option value="2">Medium</option><option value="3">High</option></select></div><p class="small" style="margin:10px 0 0">Set a time to get a reminder while DAYDIARY is open.</p></div>
   <div class="panel"><div class="panel-head"><h2>All tasks</h2><span class="pill" id="taskTotal">0</span></div><select id="tagFilter" class="field hidden" aria-label="Filter by tag" onchange="render()" style="margin-bottom:10px"></select><div id="tasksList"></div></div>
   <div class="panel"><div class="panel-head"><h2>New habit</h2></div><div class="addrow"><input id="plannerHabitInput" class="field" placeholder="What habit do you want to build?"><button class="primary" onclick="addPlannerHabit()">Add</button></div><div class="addrow" style="margin-bottom:0"><select id="habitSchedule" class="field" aria-label="Habit schedule" onchange="toggleHabitSchedule()"><option value="daily">Everyday</option><option value="weekdays">Every weekday</option><option value="weekends">Every weekend</option><option value="custom">Custom days…</option></select></div><div id="habitCustomDays" class="repeat-days hidden"><span class="small">Do this on</span><label class="repeat-day"><input type="checkbox" name="habitDay" value="0"><span>Sun</span></label><label class="repeat-day"><input type="checkbox" name="habitDay" value="1"><span>Mon</span></label><label class="repeat-day"><input type="checkbox" name="habitDay" value="2"><span>Tue</span></label><label class="repeat-day"><input type="checkbox" name="habitDay" value="3"><span>Wed</span></label><label class="repeat-day"><input type="checkbox" name="habitDay" value="4"><span>Thu</span></label><label class="repeat-day"><input type="checkbox" name="habitDay" value="5"><span>Fri</span></label><label class="repeat-day"><input type="checkbox" name="habitDay" value="6"><span>Sat</span></label></div></div>
 
   <p class="small">Tasks are saved in this browser. This web version doesn't directly read Apple Calendar.</p>
  </section>
- <section id="assistant" class="view"><h1 class="page-title">Assistant</h1><p class="page-sub">A simple planning companion. No AI subscription or API bill.</p>
-  <div class="panel"><div class="eyebrow">TRY ASKING</div><div class="formstack" style="margin-top:12px">
-   <button class="secondary" onclick="askPreset('Help me plan my day')">Help me plan my day ↗</button>
-   <button class="secondary" onclick="askPreset('Give me ideas for productive habits')">Ideas for productive habits ↗</button>
-   <button class="secondary" onclick="askPreset('Help me organize my tasks')">Help me organize my tasks ↗</button>
-   <button class="secondary" onclick="askPreset('How can I take better notes?')">How can I take better notes? ↗</button>
-  </div><div class="addrow"><input id="prompt" class="field" placeholder="What would you like help with?"><button class="primary" onclick="ask()">Ask</button></div><div id="answer" class="suggestion hidden"></div></div>
-  <p class="small">DAYDIARY's assistant runs simple rules in your browser. It isn't a general-purpose AI chatbot, and your notes and tasks aren't sent to an AI service.</p>
- </section>
+
 </div>
 <div id="toast" class="toast hidden" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastUndo" class="hidden">Undo</button></div>
 <nav class="tabs" aria-label="Main navigation">
@@ -362,8 +354,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
  <button class="tab" data-tab="notes" onclick="go('notes')" aria-label="Notes" title="Notes"><b>▤</b></button>
  <button class="tab" data-tab="journal" onclick="go('journal')" aria-label="Journal" title="Journal"><b>✎</b></button>
  <button class="tab" data-tab="progress" onclick="go('progress')" aria-label="Progress" title="Progress"><b>◉</b></button>
- <button class="tab" data-tab="planner" onclick="go('planner')" aria-label="Planner" title="Planner"><b>▦</b></button>
- <button class="tab" data-tab="assistant" onclick="go('assistant')" aria-label="Assistant" title="Assistant"><b>✧</b></button>
+ <button class="tab" data-tab="planner" onclick="go('planner')" aria-label="New Events" title="New Events"><b>＋</b></button>
 </nav>
 <script>
 // Explicit element references: Safari on iPhone does not reliably expose IDs as globals.
@@ -372,8 +363,7 @@ const today = $('today'), greeting = $('greeting'), taskCount = $('taskCount'), 
 const progressPct = $('progressPct'), progressBar = $('progressBar'), progressLabel = $('progressLabel'), taskTotal = $('taskTotal');
 const homeTasks = $('homeTasks'), homeNotes = $('homeNotes'), tasksList = $('tasksList'), habitsList = $('habitsList'), notesList = $('notesList');
 const noteTitle = $('noteTitle'), noteBody = $('noteBody'), noteSearch = $('noteSearch');
-const habitInput = $('habitInput'), taskInput = $('taskInput'), taskDate = $('taskDate');
-const prompt = $('prompt'), answer = $('answer');
+const taskInput = $('taskInput'), taskDate = $('taskDate');
 const makeId = () => (window.crypto && typeof window.crypto.randomUUID === 'function') ? window.crypto.randomUUID() : 'p-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
 const key='pulse.web.v1';
 let data;
@@ -403,7 +393,6 @@ function toggleHabitSchedule(){const custom=$('habitSchedule').value==='custom';
 function addPlannerHabit(){const n=$('plannerHabitInput').value.trim(),schedule=$('habitSchedule').value,days=schedule==='custom'?[...document.querySelectorAll('input[name="habitDay"]:checked')].map(x=>+x.value):[];if(!n){$('plannerHabitInput').focus();return}if(schedule==='custom'&&!days.length){toast('Choose at least one day for this habit');return}data.habits.push({id:makeId(),name:n,days:[],schedule,scheduleDays:days});$('plannerHabitInput').value='';$('habitSchedule').value='daily';document.querySelectorAll('input[name="habitDay"]').forEach(x=>x.checked=false);toggleHabitSchedule();save()}
 function delTask(id){del('tasks',id,'Task')}
 function taskHTML(t){const od=!t.done&&t.due&&t.due<day(),P=['','Low','Medium','High'][t.pri||0],meta=[P&&P+' priority',t.tag&&'#'+t.tag,t.time].filter(Boolean).map(esc).join(' · ');return `<div class="task"><button class="check ${t.done?'done':''}" onclick="toggleTask('${t.id}')" aria-pressed="${!!t.done}" aria-label="Done: ${esc(t.title)}">${t.done?'✓':''}</button><div class="item-main"><div class="item-title ${t.done?'done-text':''}">${esc(t.title)}</div>${t.due?`<div class="task-date ${od?'overdue-t':''}">${od?'Overdue · ':''}${new Date(t.due+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</div>`:''}${meta?`<div class="task-date ${t.pri===3&&!t.done?'overdue-t':''}">${meta}</div>`:''}</div><button class="delete" onclick="delTask('${t.id}')" aria-label="Delete ${esc(t.title)}">×</button></div>`}
-function addHabit(){const n=habitInput.value.trim();if(!n){habitInput.focus();return}data.habits.push({id:makeId(),name:n,days:[],schedule:'daily',scheduleDays:[]});habitInput.value='';save()}
 function toggleHabit(id,k){k=k||day();const h=data.habits.find(x=>x.id===id);if(!h)return;h.days=h.days||[];has(h.days,k)?h.days=h.days.filter(x=>x!==k):h.days.push(k);save()}
 function delHabit(id){del('habits',id,'Habit')}
 function render(){const open=sortT(data.tasks.filter(t=>!t.done)),od=open.filter(t=>t.due&&t.due<day()).length,done=data.habits.filter(h=>has(h.days,day())).length,pct=data.habits.length?Math.round(done/data.habits.length*100):0;
@@ -415,7 +404,7 @@ tasksList.innerHTML=shown.length?shown.map(taskHTML).join(''):'<div class="empty
 const ft=$('focusTask'),fv=ft.value;ft.innerHTML='<option value="">No specific task</option>'+open.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');if(open.some(t=>t.id===fv))ft.value=fv;renderActivityCalendar();updateDailyScore();
 $('progressTaskTotal').textContent=data.tasks.length;
 $('progressTasksList').innerHTML=data.tasks.length?sortT(data.tasks).map(taskHTML).join(''):'<div class="empty">Your tasks will appear here. Add one in Planner.</div>';
-habitsList.innerHTML=data.habits.length?data.habits.map(h=>{const on=has(h.days,day()),st=streak(h);return `<div class="habit"><button class="check ${on?'done':''}" onclick="toggleHabit('${h.id}')" aria-pressed="${on}" aria-label="Done today: ${esc(h.name)}">${on?'✓':''}</button><div class="item-main"><div class="item-title">${esc(h.name)}</div><div class="item-meta">${st>1?st+'-day streak · ':''}${(h.days||[]).length} days completed</div></div><button class="delete" onclick="delHabit('${h.id}')" aria-label="Delete ${esc(h.name)}">×</button></div>`}).join(''):'<div class="empty">Add a habit to start tracking progress.</div>';
+habitsList.innerHTML=data.habits.length?data.habits.map(h=>{const st=streak(h),completed=(h.days||[]).length;return `<div class="habit"><div class="item-main"><div class="item-title">${esc(h.name)}</div><div class="item-meta">${completed} days completed · ${st} current streak</div></div></div>`}).join(''):'<div class="empty">Your habits will appear here. Add one in New Events.</div>'
 if(document.activeElement!==noteSearch)renderNotes();renderNoteView();if($('globalSearch'))renderSearch();
 const taskDay=t=>String(t.due||'').slice(0,10);
 const openTasks=sortT(data.tasks.filter(t=>!t.done));
@@ -447,15 +436,6 @@ $('dashStreaks').innerHTML=data.habits.length?data.habits.map(h=>{const n=streak
 const upcoming=sortT(data.tasks.filter(t=>!t.done&&t.due&&t.due>day())).filter(t=>{const d=new Date(t.due+'T12:00:00'),now=new Date();const limit=new Date();limit.setDate(limit.getDate()+7);return d<=limit}).slice(0,5);
 $('dashUpcoming').innerHTML=upcoming.length?upcoming.map(t=>'<div class="task"><div class="item-main"><div class="item-title">'+esc(t.title)+'</div><div class="task-date">'+new Date(t.due+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})+'</div></div></div>').join(''):'<div class="empty">No upcoming deadlines in the next 7 days.</div>';
 }
-function askPreset(s){prompt.value=s;ask()}
-function ask(){const q=prompt.value.trim().toLowerCase();if(!q)return;const open=sortT(data.tasks.filter(t=>!t.done)),od=open.filter(t=>t.due&&t.due<day()),left=data.habits.filter(h=>!has(h.days,day())),best=Math.max(0,...data.habits.map(streak)),t=re=>re.test(q);let r;
-if(t(/\b(habits?|streaks?|routines?)\b/))r=data.habits.length?`You’ve completed ${data.habits.length-left.length} of ${data.habits.length} habits today${left.length?`. Next up: “${left[0].name}”`:'. Nice work'}. Your longest current streak is ${best} day${best===1?'':'s'}. Keep new habits small enough to repeat on your worst day.`:'Start small: add one habit that takes less than ten minutes, and make it easy to repeat.';
-else if(t(/\b(tasks?|to-?dos?|overdue|deadlines?|organi[sz]e|prioriti[sz]e)\b/))r=open.length?`You have ${open.length} unfinished task${open.length===1?'':'s'}${od.length?`, ${od.length} overdue`:''}. ${od.length?'Clear the overdue ones first, starting with':'Your next one is'} “${open[0].title}”. Give important tasks a due date so they sort to the top.`:'Your task list is clear. Add new tasks as they come up, and give important ones a due date.';
-else if(t(/\b(notes?|notebook|journal|writ(e|ing))\b/))r=`Give each note a clear title, keep one main idea per note, and use search to find it later. You have ${data.notes.length} saved note${data.notes.length===1?'':'s'}.`;
-else if(t(/\b(day|plan|today|schedule|focus|priorit(y|ies))\b/))r=(open.length?`You have ${open.length} unfinished task${open.length===1?'':'s'}${od.length?`, ${od.length} overdue`:''}. Start with “${open[0].title}”, then pick one more priority and group the small tasks together.`:'You have no unfinished tasks. Pick one meaningful goal for today and leave room for a break.')+(left.length?` You also have ${left.length} habit${left.length===1?'':'s'} left today.`:'');
-else if(t(/\b(hi|hello|hey)\b/))r='Hi! Ask me about your day, tasks, habits, or notes.';
-else r='I can help with simple planning using your saved DAYDIARY information. Try asking about your day, tasks, habits, or notes. This starter assistant works offline and is not a general-purpose AI chatbot.';
-answer.textContent=r;answer.classList.remove('hidden')}
 function exportData(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='daydiary-backup-'+day()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Backup downloaded')}
 function importData(e){const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!['notes','tasks','habits'].every(k=>Array.isArray(d[k]))||(d.journal!==undefined&&!Array.isArray(d.journal)))throw 0;if(!confirm('Replace everything in DAYDIARY with this backup?'))return;data={journal:(d.journal||[]).filter(e=>e&&isDay(e.date)).map(e=>({id:makeId(),date:e.date,body:String(e.body||''),mood:String(e.mood||''),updated:+e.updated||Date.now()})),notes:d.notes.map(n=>({id:makeId(),title:String(n.title||''),body:String(n.body||''),date:+n.date||Date.now(),edited:n.edited?+n.edited:undefined,pin:!!n.pin})),tasks:d.tasks.map(t=>({id:makeId(),title:String(t.title||''),due:isDay(t.due)?t.due:'',done:!!t.done,pri:[1,2,3].includes(+t.pri)?+t.pri:0,rep:['daily','weekly','monthly'].includes(t.rep)?t.rep:'',tag:String(t.tag||'').slice(0,20),time:/^\d\d:\d\d$/.test(t.time)?t.time:''})),habits:d.habits.map(h=>({id:makeId(),name:String(h.name||''),days:Array.isArray(h.days)?h.days.filter(isDay):[]}))};save();toast('Backup imported')}catch(_){toast('That file isn’t a DAYDIARY backup.')}};r.readAsText(f)}
 
@@ -662,12 +642,12 @@ function syncUI(){const on=!!sync.refresh,out=$('syncOut'),inside=$('syncIn'),wh
 let viewId=null;
 function openNote(id){go('notes');viewId=id;renderNoteView()}
 function renderNoteView(){const n=viewId&&data.notes.find(x=>x.id===viewId);if(viewId&&!n)viewId=null;const v=!!n;['noteForm','noteSearch','notesPanel'].forEach(i=>$(i).classList.toggle('hidden',v));$('noteView').classList.toggle('hidden',!v);if(v)$('noteView').innerHTML=`<div class="note-title" style="font-size:20px;overflow-wrap:anywhere">${esc(n.title)}</div><div class="item-meta">${n.pin?'Pinned · ':''}${new Date(n.date).toLocaleDateString()}${n.edited?' · edited':''}</div><div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5;margin:16px 0">${n.body?esc(n.body):'<span class="small">No text in this note.</span>'}</div><div class="addrow" style="flex-wrap:wrap;margin-bottom:0"><button class="secondary" onclick="go('notes')">All notes</button><button class="secondary" onclick="editNote('${n.id}')">Edit</button><button class="secondary" onclick="pinNote('${n.id}')">${n.pin?'Unpin':'Pin'}</button><button class="secondary" onclick="delNote('${n.id}')">Delete</button></div>`}
-Object.assign(window,{shiftActivityMonth,selectActivityDate,go,addNote,editNote,cancelEdit,delNote,renderNotes,renderSearch,addTask,toggleTask,delTask,addHabit,toggleHabit,delHabit,askPreset,ask,exportData,importData,toggleTheme,pinNote,startFocus,startCustomFocus,pauseFocus,resumeFocus,dismissFocusComplete,stopFocus,authGo,signOut,syncNow,openNote});
-[[noteTitle,'Note title'],[noteBody,'Note text'],[noteSearch,'Search notes'],[taskInput,'New task'],[habitInput,'New habit'],[prompt,'Ask DAYDIARY']].forEach(([el,l])=>el.setAttribute('aria-label',l));answer.setAttribute('role','status');
+Object.assign(window,{shiftActivityMonth,selectActivityDate,go,addNote,editNote,cancelEdit,delNote,renderNotes,renderSearch,addTask,toggleTask,delTask,toggleHabit,delHabit,exportData,importData,toggleTheme,pinNote,startFocus,startCustomFocus,pauseFocus,resumeFocus,dismissFocusComplete,stopFocus,authGo,signOut,syncNow,openNote});
+[[noteTitle,'Note title'],[noteBody,'Note text'],[noteSearch,'Search notes'],[taskInput,'New task'],].forEach(([el,l])=>el.setAttribute('aria-label',l));
 document.querySelector('.tab.active').setAttribute('aria-current','page');setTheme(document.documentElement.dataset.theme||'light');applyCustomization();
 const now=new Date();updateGreeting();today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});$('journalDate').value=day();render();renderActivityCalendar();updateDailyScore();let savedView='home';try{const candidate=localStorage.getItem('pulse.lastView');if(candidate&&document.getElementById(candidate)?.classList.contains('view'))savedView=candidate}catch(e){}if(savedView!=='home')go(savedView);loadJournalDate();renderJournalHistory();
 try{localStorage.setItem('__pulse_test__','1');localStorage.removeItem('__pulse_test__')}catch(e){const s=$('runtimeStatus');s.textContent='Saving isn’t available in this browser, so changes will be lost when you close the page.';s.classList.remove('hidden')}
-$('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});$('habitInput').addEventListener('keydown',e=>{if(e.key==='Enter')addHabit()});$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter')ask()});
+$('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});
 setQuote();renderFocus();setInterval(tick,1000);document.addEventListener('visibilitychange',()=>{tick();setQuote()});syncUI();syncNow();setInterval(syncNow,60000);window.addEventListener('online',syncNow);document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncNow()});$('syPass').addEventListener('keydown',e=>{if(e.key==='Enter')authGo('in')});if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body></html>
