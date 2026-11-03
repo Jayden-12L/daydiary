@@ -216,7 +216,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
 
 /* Final dock layout overrides. */
 @media (min-width:1100px){
-  .shell{width:calc(100% - 240px)!important;max-width:none!important;margin:0 0 0 240px!important;padding:38px clamp(28px,3vw,52px) 60px!important;box-sizing:border-box}
+  .shell{width:calc(100% - 190px)!important;max-width:none!important;margin:0 0 0 190px!important;padding:38px clamp(28px,3vw,52px) 60px!important;box-sizing:border-box}
   .tabs{
     position:fixed!important;top:50%!important;left:18px!important;right:auto!important;bottom:auto!important;
     z-index:50!important;display:flex!important;flex-direction:column!important;
@@ -282,7 +282,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
   .tabs .tab.active .tab-label{font-weight:700!important}
 }
 /* How-to guide layout */
-.page-heading-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.page-heading-row{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:8px}
 .page-heading-row .page-title{min-width:0}
 .howto-open{flex:none;padding:9px 12px;font-size:12px}
 .howto-intro h2{font-size:21px;letter-spacing:-.6px;margin:8px 0}
