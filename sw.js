@@ -1,5 +1,5 @@
-const CACHE_NAME='daydiary-shell-v2';
-const CORE_ASSETS=['./','./manifest.json','./icon.svg'];
+const CACHE_NAME='daydiary-shell-v3';
+const CORE_ASSETS=['./','./manifest.json','./icon.svg','./apple-touch-icon.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE_ASSETS)));
   self.skipWaiting();
