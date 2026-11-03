@@ -67,6 +67,17 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
 :root[data-theme=dark] .tab.active{background:rgba(255,255,255,.11);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
 :root[data-theme=dark] .pill{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.1)}
 
+
+:root{--green:var(--custom-accent,#26966b)}
+.primary{background:var(--green);color:#fff}
+.accent-swatches{display:flex;align-items:center;gap:13px;flex-wrap:wrap;padding:3px 2px}
+.accent-swatch{width:29px;height:29px;border-radius:50%;border:3px solid var(--card);background:var(--swatch);box-shadow:0 0 0 1px var(--line),inset 0 1px 1px #ffffff55;padding:0}
+.accent-swatch.active{outline:2px solid var(--ink);outline-offset:3px}
+body.compact-layout .panel{padding:16px}
+body.compact-layout .metric{padding:14px}
+body.compact-layout .task,body.compact-layout .note,body.compact-layout .habit{padding-top:8px;padding-bottom:8px}
+body.compact-layout .shell{padding-top:25px}
+
 .sync-card{width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow);margin-top:22px}.sync-card .field{width:100%;margin:6px 0 12px}.sync-card .addrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px}.sync-card .addrow button{flex:1}.sync-card label{display:block}</style>
 </head>
 <body>
@@ -102,6 +113,28 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
    <button class="quick" onclick="go('progress')"><span class="ico">◉</span><span>Track habits</span></button>
    <button class="quick" onclick="go('journal')"><span class="ico">▤</span><span>Write journal</span></button>
   </div></div>
+  <div class="panel" id="appearancePanel">
+   <div class="panel-head"><h2>Personalize</h2><button class="link" type="button" onclick="resetCustomization()">Reset</button></div>
+   <p class="small" style="margin:-5px 0 15px">Make DAYDIARY feel a little more like yours.</p>
+   <div class="small" style="font-weight:650;margin-bottom:9px">Accent color</div>
+   <div class="accent-swatches" role="group" aria-label="Choose an accent color">
+    <button class="accent-swatch" type="button" data-color="#26966b" style="--swatch:#26966b" aria-label="Green" title="Green" onclick="setAccent('#26966b')"></button>
+    <button class="accent-swatch" type="button" data-color="#3478f6" style="--swatch:#3478f6" aria-label="Blue" title="Blue" onclick="setAccent('#3478f6')"></button>
+    <button class="accent-swatch" type="button" data-color="#8b5cf6" style="--swatch:#8b5cf6" aria-label="Purple" title="Purple" onclick="setAccent('#8b5cf6')"></button>
+    <button class="accent-swatch" type="button" data-color="#e08a36" style="--swatch:#e08a36" aria-label="Orange" title="Orange" onclick="setAccent('#e08a36')"></button>
+    <button class="accent-swatch" type="button" data-color="#d65b91" style="--swatch:#d65b91" aria-label="Pink" title="Pink" onclick="setAccent('#d65b91')"></button>
+    <button class="accent-swatch" type="button" data-color="#159c9a" style="--swatch:#159c9a" aria-label="Teal" title="Teal" onclick="setAccent('#159c9a')"></button>
+   </div>
+   <div class="small" style="font-weight:650;margin:18px 0 8px">Dashboard greeting</div>
+   <div class="addrow" style="margin:0">
+    <input id="displayName" class="field" maxlength="24" placeholder="Your name (optional)" aria-label="Name for dashboard greeting">
+    <button class="secondary" type="button" onclick="saveDisplayName()">Save</button>
+   </div>
+   <div class="small" style="font-weight:650;margin:18px 0 8px">Layout</div>
+   <select id="layoutDensity" class="field" aria-label="Dashboard layout density" onchange="setLayout(this.value)">
+    <option value="comfortable">Comfortable</option><option value="compact">Compact</option>
+   </select>
+  </div>
   <div class="panel sync-card" id="syncPanel"><div class="panel-head"><h2>Sync &amp; account</h2></div><p class="small" style="margin:0 0 14px">Keep your DAYDIARY data backed up and available across devices.</p><div id="syncOut"><label class="small" for="syEmail">Email</label><input class="field" id="syEmail" type="email" placeholder="you@example.com" autocomplete="email"><label class="small" for="syPass">Password</label><input class="field" id="syPass" type="password" placeholder="At least 6 characters" autocomplete="current-password"><div class="addrow"><button class="primary" type="button" onclick="authGo('in')">Sign in</button><button class="secondary" type="button" onclick="authGo('up')">Create account</button></div></div><div id="syncIn" class="hidden"><p id="syncWho" class="small"></p><div class="addrow"><button class="primary" type="button" onclick="syncNow()">Sync now</button><button class="secondary" type="button" onclick="signOut()">Sign out</button></div></div><p id="syncMsg" class="small" role="status" aria-live="polite" style="margin:12px 0 0"></p></div>
   <div class="hidden" aria-hidden="true">
    <span id="taskCount">0</span><span id="taskHint"></span><span id="habitCount">0/0</span>
@@ -302,6 +335,23 @@ else r='I can help with simple planning using your saved DAYDIARY information. T
 answer.textContent=r;answer.classList.remove('hidden')}
 function exportData(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='daydiary-backup-'+day()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Backup downloaded')}
 function importData(e){const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!['notes','tasks','habits'].every(k=>Array.isArray(d[k]))||(d.journal!==undefined&&!Array.isArray(d.journal)))throw 0;if(!confirm('Replace everything in DAYDIARY with this backup?'))return;data={journal:(d.journal||[]).filter(e=>e&&isDay(e.date)).map(e=>({id:makeId(),date:e.date,body:String(e.body||''),mood:String(e.mood||''),updated:+e.updated||Date.now()})),notes:d.notes.map(n=>({id:makeId(),title:String(n.title||''),body:String(n.body||''),date:+n.date||Date.now(),edited:n.edited?+n.edited:undefined,pin:!!n.pin})),tasks:d.tasks.map(t=>({id:makeId(),title:String(t.title||''),due:isDay(t.due)?t.due:'',done:!!t.done,pri:[1,2,3].includes(+t.pri)?+t.pri:0,rep:['daily','weekly','monthly'].includes(t.rep)?t.rep:'',tag:String(t.tag||'').slice(0,20),time:/^\d\d:\d\d$/.test(t.time)?t.time:''})),habits:d.habits.map(h=>({id:makeId(),name:String(h.name||''),days:Array.isArray(h.days)?h.days.filter(isDay):[]}))};save();toast('Backup imported')}catch(_){toast('That file isn’t a DAYDIARY backup.')}};r.readAsText(f)}
+
+let customization=(()=>{try{return JSON.parse(localStorage.getItem('daydiary.customization'))||{}}catch(e){return{}}})();
+function saveCustomization(){try{localStorage.setItem('daydiary.customization',JSON.stringify(customization))}catch(e){}}
+function applyCustomization(){
+ const color=/^#[0-9a-f]{6}$/i.test(customization.accent||'')?customization.accent:'#26966b';
+ document.documentElement.style.setProperty('--custom-accent',color);
+ document.body.classList.toggle('compact-layout',customization.layout==='compact');
+ document.querySelectorAll('.accent-swatch').forEach(b=>{const active=b.dataset.color===color;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+ if($('displayName'))$('displayName').value=customization.name||'';
+ if($('layoutDensity'))$('layoutDensity').value=customization.layout==='compact'?'compact':'comfortable';
+ updateGreeting();
+}
+function setAccent(color){if(!/^#[0-9a-f]{6}$/i.test(color))return;customization.accent=color;saveCustomization();applyCustomization()}
+function saveDisplayName(){customization.name=($('displayName').value||'').trim().slice(0,24);saveCustomization();updateGreeting();toast(customization.name?'Greeting updated.':'Name cleared.')}
+function setLayout(value){customization.layout=value==='compact'?'compact':'comfortable';saveCustomization();applyCustomization()}
+function resetCustomization(){customization={};saveCustomization();applyCustomization();toast('Appearance settings reset.')}
+function updateGreeting(){const h=new Date().getHours(),g=h<12?'Good morning':h<17?'Good afternoon':'Good evening',name=(customization.name||'').trim();$('greeting').textContent=g+(name?', '+name:'')+'.'}
 function setTheme(t){document.documentElement.dataset.theme=t;$('themeBtn').textContent=t==='dark'?'☀':'☾';document.querySelector('meta[name=theme-color]').content=t==='dark'?'#0f1013':'#f5f5f7'}
 function toggleTheme(){const t=document.documentElement.dataset.theme==='dark'?'light':'dark';setTheme(t);try{localStorage.setItem('pulse.theme',t)}catch(e){}}
 const QUOTES=['Small steps, repeated daily, beat big plans left for later.','Start with the next small thing.','You don’t need more time, just a clear first step.','Done is a good place to begin.','Rest is part of the plan, not a break from it.','Make it easy to start and hard to skip.','One focused hour can change a whole day.','Progress rarely feels dramatic while it’s happening.','Decide what matters, then protect it.','A messy start still counts.','Consistency is quiet, and it adds up.','Do the hard thing first, while it’s still small.','Your future self will thank you for ten minutes today.','Clear your head by writing it down.','Write it down so your mind can rest.','Today is a good day to finish something small.','Enough effort, repeated, becomes a habit.','Slow progress is still progress.','Choose one thing and give it your full attention.','Begin before you feel ready.','Tidy the small things and the big ones get lighter.','Notice what went well today.','A short walk can fix a long afternoon.','Plan lightly, then follow through.','What you do most days matters more than what you do once.','Ask what the next step is, not what the whole path is.','Protect your mornings and your evenings will thank you.','Take the pressure off and keep the habit.','Good days are built from ordinary hours.','You can pause without quitting.','Make tomorrow easier before you go to bed.','Be kind to yourself and keep going.','Finish one task before you open another.','Your attention is worth guarding.','Look back at how far you’ve come this week.','Keep your promises to yourself.','Less rushing, more doing.','A clear list makes a quieter mind.','Some days the win is simply showing up.','Turn the big goal into a ten-minute start.','Rest, then return with fresh eyes.','Little by little is still a lot.','Say no to something so you can say yes to what matters.','Today counts, even if it’s ordinary.','Keep the streak, but don’t fear breaking it.'];
@@ -474,8 +524,8 @@ function openNote(id){go('notes');viewId=id;renderNoteView()}
 function renderNoteView(){const n=viewId&&data.notes.find(x=>x.id===viewId);if(viewId&&!n)viewId=null;const v=!!n;['noteForm','noteSearch','notesPanel'].forEach(i=>$(i).classList.toggle('hidden',v));$('noteView').classList.toggle('hidden',!v);if(v)$('noteView').innerHTML=`<div class="note-title" style="font-size:20px;overflow-wrap:anywhere">${esc(n.title)}</div><div class="item-meta">${n.pin?'Pinned · ':''}${new Date(n.date).toLocaleDateString()}${n.edited?' · edited':''}</div><div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5;margin:16px 0">${n.body?esc(n.body):'<span class="small">No text in this note.</span>'}</div><div class="addrow" style="flex-wrap:wrap;margin-bottom:0"><button class="secondary" onclick="go('notes')">All notes</button><button class="secondary" onclick="editNote('${n.id}')">Edit</button><button class="secondary" onclick="pinNote('${n.id}')">${n.pin?'Unpin':'Pin'}</button><button class="secondary" onclick="delNote('${n.id}')">Delete</button></div>`}
 Object.assign(window,{go,addNote,editNote,cancelEdit,delNote,renderNotes,renderSearch,addTask,toggleTask,delTask,addHabit,toggleHabit,delHabit,askPreset,ask,exportData,importData,toggleTheme,pinNote,startFocus,startCustomFocus,pauseFocus,resumeFocus,dismissFocusComplete,stopFocus,authGo,signOut,syncNow,openNote});
 [[noteTitle,'Note title'],[noteBody,'Note text'],[noteSearch,'Search notes'],[taskInput,'New task'],[habitInput,'New habit'],[prompt,'Ask DAYDIARY']].forEach(([el,l])=>el.setAttribute('aria-label',l));answer.setAttribute('role','status');
-document.querySelector('.tab.active').setAttribute('aria-current','page');setTheme(document.documentElement.dataset.theme||'light');
-const now=new Date(),hour=now.getHours();greeting.textContent=(hour<12?'Good morning.':hour<17?'Good afternoon.':'Good evening.');today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});$('journalDate').value=day();render();loadJournalDate();renderJournalCalendar();renderJournalHistory();
+document.querySelector('.tab.active').setAttribute('aria-current','page');setTheme(document.documentElement.dataset.theme||'light');applyCustomization();
+const now=new Date();updateGreeting();today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});$('journalDate').value=day();render();loadJournalDate();renderJournalCalendar();renderJournalHistory();
 try{localStorage.setItem('__pulse_test__','1');localStorage.removeItem('__pulse_test__')}catch(e){const s=$('runtimeStatus');s.textContent='Saving isn’t available in this browser, so changes will be lost when you close the page.';s.classList.remove('hidden')}
 $('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});$('habitInput').addEventListener('keydown',e=>{if(e.key==='Enter')addHabit()});$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter')ask()});
 setQuote();renderFocus();setInterval(tick,1000);document.addEventListener('visibilitychange',()=>{tick();setQuote()});syncUI();syncNow();setInterval(syncNow,60000);window.addEventListener('online',syncNow);document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncNow()});$('syPass').addEventListener('keydown',e=>{if(e.key==='Enter')authGo('in')});if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
