@@ -213,6 +213,64 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
 
 #home>.daily-score-panel{grid-column:1/-1}
 .daily-score-layout{display:flex;align-items:center;gap:18px;margin:8px 0 16px}.daily-score-number{font-size:clamp(42px,8vw,58px);font-weight:780;letter-spacing:-3px;line-height:1;font-variant-numeric:tabular-nums}.daily-score-number:after{content:'/100';font-size:15px;letter-spacing:0;color:var(--muted);font-weight:650;margin-left:4px}.daily-score-copy{min-width:0}.daily-score-label{font-weight:700;font-size:16px}.daily-score-copy p{margin:5px 0 0}.daily-score-bar{height:9px}.activity-legend-copy{margin:10px 0 0}
+
+/* Final dock layout overrides: keep these last so later styles cannot break the dock. */
+@media (min-width:701px){
+  .tabs{
+    position:fixed!important;left:0!important;right:0!important;bottom:0!important;
+    z-index:50!important;display:flex!important;flex-direction:row!important;
+    align-items:center!important;justify-content:center!important;
+    width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;
+    transform:none!important;overflow:visible!important;
+    padding:9px 10px calc(9px + env(safe-area-inset-bottom))!important;
+    gap:6px!important;border-radius:0!important;
+    background:var(--tabbg)!important;
+    -webkit-backdrop-filter:blur(18px)!important;backdrop-filter:blur(18px)!important;
+    border:0!important;border-top:1px solid var(--line)!important;
+    box-shadow:none!important;
+  }
+  .tabs .tab{
+    display:grid!important;flex:0 1 auto!important;flex-direction:initial!important;
+    align-items:center!important;justify-content:center!important;
+    min-width:48px!important;min-height:46px!important;height:auto!important;
+    padding:9px 17px!important;margin:0!important;gap:0!important;
+    border:0!important;border-radius:14px!important;background:transparent!important;
+    color:#888!important;font-size:0!important;
+  }
+  .tabs .tab.active{background:var(--soft)!important;color:var(--ink)!important;box-shadow:none!important}
+  .tabs .tab b{display:block!important;font-size:21px!important;line-height:1!important;margin:0!important;font-weight:500!important}
+  .tabs .tab .tab-label{display:none!important}
+}
+@media (max-width:700px){
+  .tabs{
+    position:fixed!important;left:50%!important;right:auto!important;
+    bottom:16px!important;bottom:max(16px,env(safe-area-inset-bottom))!important;
+    z-index:50!important;display:flex!important;flex-direction:row!important;
+    align-items:center!important;justify-content:space-around!important;
+    width:calc(100% - 28px)!important;max-width:480px!important;
+    height:auto!important;min-height:64px!important;max-height:none!important;
+    transform:translateX(-50%)!important;overflow:visible!important;
+    box-sizing:border-box!important;padding:6px 8px!important;gap:2px!important;
+    border:1px solid color-mix(in srgb,var(--line) 55%,transparent)!important;
+    border-radius:25px!important;
+    background:color-mix(in srgb,var(--bg) 48%,transparent)!important;
+    -webkit-backdrop-filter:blur(32px) saturate(200%)!important;
+    backdrop-filter:blur(32px) saturate(200%)!important;
+    box-shadow:0 10px 34px #00000020,0 1px 0 #ffffff18 inset!important;
+  }
+  .tabs .tab{
+    display:flex!important;flex:1 1 0!important;flex-direction:column!important;
+    align-items:center!important;justify-content:center!important;
+    min-width:0!important;min-height:50px!important;height:auto!important;
+    padding:5px 2px 3px!important;margin:0!important;gap:4px!important;
+    border:0!important;border-radius:12px!important;background:transparent!important;
+    color:var(--muted)!important;font-size:inherit!important;
+  }
+  .tabs .tab.active{background:transparent!important;color:var(--green)!important;box-shadow:none!important}
+  .tabs .tab b{display:block!important;font-size:21px!important;line-height:1!important;margin:0!important;font-weight:500!important}
+  .tabs .tab .tab-label{display:block!important;font-size:10px!important;line-height:1.1!important;font-weight:550!important;letter-spacing:-.1px!important;white-space:nowrap!important}
+  .tabs .tab.active .tab-label{font-weight:700!important}
+}
 </style>
 </head>
 <body>
