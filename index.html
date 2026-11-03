@@ -187,6 +187,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
 .header-theme{width:34px;height:34px;display:grid;place-items:center;flex:none;border:1px solid var(--line);border-radius:50%;background:var(--card);color:var(--ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.5);padding:0}
 .header-theme svg{width:17px;height:17px;display:block}
 .header-theme:hover{background:var(--soft);transform:translateY(-1px)}
+
+.daily-score-layout{display:flex;align-items:center;gap:18px;margin:8px 0 16px}.daily-score-number{font-size:clamp(42px,8vw,58px);font-weight:780;letter-spacing:-3px;line-height:1;font-variant-numeric:tabular-nums}.daily-score-number:after{content:'/100';font-size:15px;letter-spacing:0;color:var(--muted);font-weight:650;margin-left:4px}.daily-score-copy{min-width:0}.daily-score-label{font-weight:700;font-size:16px}.daily-score-copy p{margin:5px 0 0}.daily-score-bar{height:9px}.activity-legend-copy{margin:10px 0 0}
 </style>
 </head>
 <body>
@@ -318,22 +320,20 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
     <div class="metric"><div class="eyebrow">THIS WEEK</div><div class="num" id="focusWeek">0 min</div></div>
    </div>
   </div>
-  <div class="panel"><div class="panel-head"><h2>Today's habit progress</h2><span class="pill" id="progressPct">0%</span></div><div class="progressbar"><i id="progressBar"></i></div><p class="small" id="progressLabel">0 of 0 habits completed today</p></div>
+  <div class="panel daily-score-panel">
+   <div class="panel-head"><h2>Daily score</h2><span class="pill">Today</span></div>
+   <div class="daily-score-layout"><div class="daily-score-number" id="dailyScoreNumber">0</div><div class="daily-score-copy"><div class="daily-score-label" id="dailyScoreLabel">Getting started</div><p class="small" id="dailyScoreDetail">Complete habits and tasks scheduled for today to build your score.</p></div></div>
+   <div class="progressbar daily-score-bar"><i id="dailyScoreBar"></i></div>
+  </div>
   <div class="panel">
-   <div class="panel-head"><h2>Habit calendar</h2><div class="month-controls"><button class="secondary month-nav" onclick="shiftHabitMonth(-1)" aria-label="Previous month">‹</button><button class="secondary month-nav" onclick="shiftHabitMonth(1)" aria-label="Next month">›</button></div></div>
-   <div class="month-title" id="habitMonthTitle"></div>
-   <div class="month-grid" id="habitMonthGrid" aria-label="Monthly habit activity"></div>
+   <div class="panel-head"><h2>Activity calendar</h2><div class="month-controls"><button class="secondary month-nav" onclick="shiftActivityMonth(-1)" aria-label="Previous month">‹</button><button class="secondary month-nav" onclick="shiftActivityMonth(1)" aria-label="Next month">›</button></div></div>
+   <div class="month-title" id="activityMonthTitle"></div>
+   <div class="month-grid" id="activityMonthGrid" aria-label="Monthly task and habit activity"></div>
    <div class="month-legend"><span>Less</span><i class="heat-0"></i><i class="heat-1"></i><i class="heat-2"></i><i class="heat-3"></i><i class="heat-4"></i><span>More</span></div>
-   <div class="selected-day" id="habitDayDetails"></div>
+   <p class="small activity-legend-copy">Color intensity reflects the share of scheduled habits and tasks completed that day.</p>
+   <div class="selected-day" id="activityDayDetails"></div>
   </div>
   <div class="panel"><div class="panel-head"><h2>Your habits</h2></div><div class="addrow"><input id="habitInput" class="field" placeholder="Add a habit"><button class="primary" onclick="addHabit()">Add</button></div><div id="habitsList"></div></div>
-  <div class="panel">
-   <div class="panel-head"><h2>Task calendar</h2><div class="month-controls"><button class="secondary month-nav" onclick="shiftTaskMonth(-1)" aria-label="Previous month">‹</button><button class="secondary month-nav" onclick="shiftTaskMonth(1)" aria-label="Next month">›</button></div></div>
-   <div class="month-title" id="taskMonthTitle"></div>
-   <div class="month-grid" id="taskMonthGrid" aria-label="Monthly task activity"></div>
-   <div class="month-legend"><span>Less</span><i class="heat-0"></i><i class="heat-1"></i><i class="heat-2"></i><i class="heat-3"></i><i class="heat-4"></i><span>More</span></div>
-   <div class="selected-day" id="taskDayDetails"></div>
-  </div>
   <div class="panel"><div class="panel-head"><h2>Your tasks</h2><span class="pill" id="progressTaskTotal">0</span></div><div id="progressTasksList"></div></div>
   
   </section>
@@ -410,7 +410,8 @@ homeTasks.innerHTML=open.length?open.slice(0,5).map(taskHTML).join(''):'<div cla
 homeNotes.innerHTML=data.notes.length?sortN(data.notes).slice(0,3).map(n=>`<div class="note" role="button" tabindex="0" onclick="openNote('${n.id}')" onkeydown="if(event.key==='Enter')openNote('${n.id}')"><div class="item-main"><div class="note-title">${esc(n.title)}</div><div class="note-body">${esc(n.body)}</div></div></div>`).join(''):'<div class="empty">Your notes will show up here.</div>';
 const tags=[...new Set(data.tasks.map(t=>t.tag).filter(Boolean))].sort(),tf=$('tagFilter'),cur=tf.value;tf.innerHTML='<option value="">All tags</option>'+tags.map(g=>`<option>${esc(g)}</option>`).join('');tf.value=tags.includes(cur)?cur:'';tf.classList.toggle('hidden',!tags.length);const shown=sortT(data.tasks.filter(t=>!tf.value||t.tag===tf.value));
 tasksList.innerHTML=shown.length?shown.map(taskHTML).join(''):'<div class="empty">No tasks yet. Add one above.</div>';
-const ft=$('focusTask'),fv=ft.value;ft.innerHTML='<option value="">No specific task</option>'+open.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');if(open.some(t=>t.id===fv))ft.value=fv;renderHabitCalendar();renderTaskCalendar();
+const ft=$('focusTask'),fv=ft.value;ft.innerHTML='<option value="">No specific task</option>'+open.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');if(open.some(t=>t.id===fv))ft.value=fv;renderActivityCalendar();updateDailyScore();
+updateDailyScore();renderActivityCalendar();
 $('progressTaskTotal').textContent=data.tasks.length;
 $('progressTasksList').innerHTML=data.tasks.length?sortT(data.tasks).map(taskHTML).join(''):'<div class="empty">Your tasks will appear here. Add one in Planner.</div>';
 habitsList.innerHTML=data.habits.length?data.habits.map(h=>{const on=has(h.days,day()),st=streak(h);return `<div class="habit"><button class="check ${on?'done':''}" onclick="toggleHabit('${h.id}')" aria-pressed="${on}" aria-label="Done today: ${esc(h.name)}">${on?'✓':''}</button><div class="item-main"><div class="item-title">${esc(h.name)}</div><div class="item-meta">${st>1?st+'-day streak · ':''}${(h.days||[]).length} days completed</div></div><button class="delete" onclick="delHabit('${h.id}')" aria-label="Delete ${esc(h.name)}">×</button></div>`}).join(''):'<div class="empty">Add a habit to start tracking progress.</div>';
@@ -478,69 +479,47 @@ function toggleTheme(){const t=document.documentElement.dataset.theme==='dark'?'
 const QUOTES=['Small steps, repeated daily, beat big plans left for later.','Start with the next small thing.','You don’t need more time, just a clear first step.','Done is a good place to begin.','Rest is part of the plan, not a break from it.','Make it easy to start and hard to skip.','One focused hour can change a whole day.','Progress rarely feels dramatic while it’s happening.','Decide what matters, then protect it.','A messy start still counts.','Consistency is quiet, and it adds up.','Do the hard thing first, while it’s still small.','Your future self will thank you for ten minutes today.','Clear your head by writing it down.','Write it down so your mind can rest.','Today is a good day to finish something small.','Enough effort, repeated, becomes a habit.','Slow progress is still progress.','Choose one thing and give it your full attention.','Begin before you feel ready.','Tidy the small things and the big ones get lighter.','Notice what went well today.','A short walk can fix a long afternoon.','Plan lightly, then follow through.','What you do most days matters more than what you do once.','Ask what the next step is, not what the whole path is.','Protect your mornings and your evenings will thank you.','Take the pressure off and keep the habit.','Good days are built from ordinary hours.','You can pause without quitting.','Make tomorrow easier before you go to bed.','Be kind to yourself and keep going.','Finish one task before you open another.','Your attention is worth guarding.','Look back at how far you’ve come this week.','Keep your promises to yourself.','Less rushing, more doing.','A clear list makes a quieter mind.','Some days the win is simply showing up.','Turn the big goal into a ten-minute start.','Rest, then return with fresh eyes.','Little by little is still a lot.','Say no to something so you can say yes to what matters.','Today counts, even if it’s ordinary.','Keep the streak, but don’t fear breaking it.'];
 function setQuote(){$('quote').textContent=QUOTES[Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5)%QUOTES.length]}
 function pinNote(id){const n=data.notes.find(x=>x.id===id);if(n){n.pin=!n.pin;save()}}
-let habitCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
-let selectedHabitDate=day();
-function shiftHabitMonth(delta){
- habitCalendarMonth=new Date(habitCalendarMonth.getFullYear(),habitCalendarMonth.getMonth()+delta,1);
- selectedHabitDate=ymd(habitCalendarMonth);
- renderHabitCalendar();
+let activityCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+let selectedActivityDate=day();
+function habitScheduledOn(h,date){
+ const schedule=h.schedule||'daily',days=h.scheduleDays||[],weekday=new Date(date+'T12:00:00').getDay();
+ return schedule==='daily'||schedule==='weekdays'&&weekday>=1&&weekday<=5||schedule==='weekends'&&(weekday===0||weekday===6)||schedule==='custom'&&days.includes(weekday);
 }
-function renderHabitCalendar(){
- const y=habitCalendarMonth.getFullYear(),m=habitCalendarMonth.getMonth();
- const first=new Date(y,m,1),daysInMonth=new Date(y,m+1,0).getDate(),offset=first.getDay();
- $('habitMonthTitle').textContent=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
- const headers=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
- let html=headers.map(x=>'<div class="month-weekday">'+x+'</div>').join('');
- for(let i=0;i<offset;i++)html+='<div aria-hidden="true"></div>';
- for(let n=1;n<=daysInMonth;n++){
-  const date=ymd(new Date(y,m,n)),count=data.habits.filter(h=>has(h.days,date)).length;
-  const ratio=data.habits.length?count/data.habits.length:0;
-  const level=count===0?0:Math.min(4,Math.ceil(ratio*4));
-  const future=date>day(),selected=date===selectedHabitDate,today=date===day();
-  html+=`<button class="month-cell heat-${level} ${selected?'selected':''} ${today?'today':''}" onclick="selectHabitDate('${date}')" ${future?'disabled':''} aria-pressed="${selected}" aria-label="${new Date(date+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}: ${count} of ${data.habits.length} habits completed">
-   <span class="month-day">${n}</span><span class="month-count">${data.habits.length?count+'/'+data.habits.length:'—'}</span>
-  </button>`;
- }
- $('habitMonthGrid').innerHTML=html;
- renderHabitDayDetails();
+function activityForDate(date){
+ const habits=data.habits.filter(h=>habitScheduledOn(h,date));
+ const tasks=data.tasks.filter(t=>String(t.due||'').slice(0,10)===date);
+ const completedHabits=habits.filter(h=>has(h.days,date)),completedTasks=tasks.filter(t=>t.done);
+ const total=habits.length+tasks.length,completed=completedHabits.length+completedTasks.length;
+ return {habits,tasks,completedHabits,completedTasks,total,completed,score:total?Math.round(completed/total*100):0};
 }
-function selectHabitDate(date){selectedHabitDate=date;renderHabitCalendar()}
-function renderHabitDayDetails(){
- const d=selectedHabitDate||day(),label=new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
- const completed=data.habits.filter(h=>has(h.days,d)).length;
- const rows=data.habits.length?data.habits.map(h=>{
-  const on=has(h.days,d),future=d>day();
-  return `<div class="selected-habit"><button class="check ${on?'done':''}" onclick="toggleHabit('${h.id}','${d}')" ${future?'disabled':''} aria-pressed="${on}" aria-label="${on?'Mark incomplete':'Mark complete'}: ${esc(h.name)}">${on?'✓':''}</button><span class="item-main">${esc(h.name)}</span><span class="small">${on?'Completed':'Not completed'}</span></div>`;
- }).join(''):'<div class="empty">Add a habit below to start building your calendar.</div>';
- $('habitDayDetails').innerHTML=`<div class="selected-day-title">${label} · ${completed}/${data.habits.length} completed</div>${rows}`;
+function updateDailyScore(){
+ const a=activityForDate(day()),score=a.score;
+ $('dailyScoreNumber').textContent=score;$('dailyScoreBar').style.width=score+'%';
+ $('dailyScoreLabel').textContent=!a.total?'Nothing scheduled yet':score===100?'Excellent work':score>=80?'Great progress':score>=60?'Good momentum':score>=30?'Building momentum':'Getting started';
+ $('dailyScoreDetail').textContent=a.total?a.completed+' of '+a.total+' scheduled items completed · '+a.completedHabits.length+' habits and '+a.completedTasks.length+' tasks':'Add habits or schedule tasks to start earning a daily score.';
 }
-let taskCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
-let selectedTaskDate=day();
-function shiftTaskMonth(delta){
- taskCalendarMonth=new Date(taskCalendarMonth.getFullYear(),taskCalendarMonth.getMonth()+delta,1);
- selectedTaskDate=ymd(taskCalendarMonth);
- renderTaskCalendar();
+function shiftActivityMonth(delta){
+ activityCalendarMonth=new Date(activityCalendarMonth.getFullYear(),activityCalendarMonth.getMonth()+delta,1);
+ selectedActivityDate=ymd(activityCalendarMonth);renderActivityCalendar();
 }
-function renderTaskCalendar(){
- const y=taskCalendarMonth.getFullYear(),m=taskCalendarMonth.getMonth(),first=new Date(y,m,1),daysInMonth=new Date(y,m+1,0).getDate(),offset=first.getDay();
- $('taskMonthTitle').textContent=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+function renderActivityCalendar(){
+ const y=activityCalendarMonth.getFullYear(),m=activityCalendarMonth.getMonth(),first=new Date(y,m,1),daysInMonth=new Date(y,m+1,0).getDate(),offset=first.getDay();
+ $('activityMonthTitle').textContent=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
  let html=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>'<div class="month-weekday">'+x+'</div>').join('');
  for(let i=0;i<offset;i++)html+='<div aria-hidden="true"></div>';
  for(let n=1;n<=daysInMonth;n++){
-  const date=ymd(new Date(y,m,n)),scheduled=data.tasks.filter(t=>t.due===date),completed=scheduled.filter(t=>t.done).length;
-  const ratio=scheduled.length?completed/scheduled.length:0,level=scheduled.length?Math.max(1,Math.ceil(ratio*4)):0;
-  const future=date>day(),selected=date===selectedTaskDate,today=date===day();
-  html+=`<button class="month-cell heat-${level} ${selected?'selected':''} ${today?'today':''}" onclick="selectTaskDate('${date}')" ${future?'disabled':''} aria-pressed="${selected}" aria-label="${new Date(date+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}: ${completed} of ${scheduled.length} tasks completed"><span class="month-day">${n}</span><span class="month-count">${scheduled.length?completed+'/'+scheduled.length:'—'}</span></button>`;
+  const date=ymd(new Date(y,m,n)),a=activityForDate(date),level=a.total&&a.completed?Math.min(4,Math.ceil(a.score/25)):0;
+  const future=date>day(),selected=date===selectedActivityDate,today=date===day();
+  html+=`<button class="month-cell heat-${level} ${selected?'selected':''} ${today?'today':''}" onclick="selectActivityDate('${date}')" ${future?'disabled':''} aria-pressed="${selected}" aria-label="${new Date(date+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}: ${a.score} percent, ${a.completed} of ${a.total} items completed"><span class="month-day">${n}</span><span class="month-count">${a.total?a.completed+'/'+a.total:'—'}</span></button>`;
  }
- $('taskMonthGrid').innerHTML=html;
- renderTaskDayDetails();
+ $('activityMonthGrid').innerHTML=html;renderActivityDayDetails();
 }
-function selectTaskDate(date){selectedTaskDate=date;renderTaskCalendar()}
-function renderTaskDayDetails(){
- const d=selectedTaskDate||day(),label=new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
- const scheduled=sortT(data.tasks.filter(t=>t.due===d)),completed=scheduled.filter(t=>t.done).length;
- const rows=scheduled.length?scheduled.map(t=>`<div class="selected-habit"><button class="check ${t.done?'done':''}" onclick="toggleTask('${t.id}')" aria-pressed="${!!t.done}" aria-label="${t.done?'Mark incomplete':'Mark complete'}: ${esc(t.title)}">${t.done?'✓':''}</button><span class="item-main ${t.done?'done-text':''}">${esc(t.title)}</span><span class="small">${t.done?'Completed':'Not completed'}</span></div>`).join(''):'<div class="empty">No tasks scheduled for this day.</div>';
- $('taskDayDetails').innerHTML=`<div class="selected-day-title">${label} · ${completed}/${scheduled.length} completed</div>${rows}`;
+function selectActivityDate(date){selectedActivityDate=date;renderActivityCalendar()}
+function renderActivityDayDetails(){
+ const d=selectedActivityDate||day(),label=new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'}),a=activityForDate(d);
+ const habitRows=a.habits.map(h=>{const on=has(h.days,d),future=d>day();return `<div class="selected-habit"><button class="check ${on?'done':''}" onclick="toggleHabit('${h.id}','${d}')" ${future?'disabled':''} aria-pressed="${on}" aria-label="${on?'Mark incomplete':'Mark complete'}: ${esc(h.name)}">${on?'✓':''}</button><span class="item-main">${esc(h.name)}</span><span class="small">${on?'Habit done':'Habit'}</span></div>`}).join('');
+ const taskRows=sortT(a.tasks).map(t=>`<div class="selected-habit"><button class="check ${t.done?'done':''}" onclick="toggleTask('${t.id}')" aria-pressed="${!!t.done}" aria-label="${t.done?'Mark incomplete':'Mark complete'}: ${esc(t.title)}">${t.done?'✓':''}</button><span class="item-main ${t.done?'done-text':''}">${esc(t.title)}</span><span class="small">${t.done?'Task done':'Task'}</span></div>`).join('');
+ $('activityDayDetails').innerHTML=`<div class="selected-day-title">${label} · ${a.score}/100 · ${a.completed}/${a.total} completed</div>${habitRows+taskRows||'<div class="empty">Nothing scheduled for this day.</div>'}`;
 }
 function weekHTML(){const ds=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d});return data.habits.length?`<div class="wk"><span></span>${ds.map(d=>`<b>${d.toLocaleDateString(undefined,{weekday:'narrow'})}</b>`).join('')}</div>`+data.habits.map(h=>`<div class="wk"><span class="item-title">${esc(h.name)}</span>${ds.map(d=>{const k=ymd(d),on=has(h.days,k);return `<button class="dot ${on?'on':''}" aria-pressed="${on}" aria-label="${esc(h.name)}, ${d.toLocaleDateString(undefined,{weekday:'long'})}" onclick="toggleHabit('${h.id}','${k}')"></button>`}).join('')}</div>`).join(''):'<div class="empty">Add a habit to see your week.</div>'}
 const journalPrompts=[
