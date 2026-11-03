@@ -29,8 +29,42 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
    <div class="metric"><div class="eyebrow">TASKS LEFT</div><div class="num" id="taskCount">0</div><div class="small" id="taskHint">One step at a time</div></div>
    <div class="metric"><div class="eyebrow">HABITS TODAY</div><div class="num" id="habitCount">0/0</div><div class="small">Build consistency</div></div>
   </div>
-  <div class="panel"><div class="panel-head"><h2>Focus</h2></div><div id="focusIdle"><select id="focusTask" class="field" aria-label="Task to focus on"></select><div class="addrow"><button class="secondary" onclick="startFocus(15)">15 min</button><button class="secondary" onclick="startFocus(25)">25 min</button><button class="secondary" onclick="startFocus(45)">45 min</button></div><p class="small" style="margin:0">A session pauses DAYDIARY reminders until it ends. DAYDIARY can't silence your phone, so also turn on Do Not Disturb or a Focus mode.</p></div><div id="focusRun" class="hidden"><div id="focusTime" style="font-size:52px;font-weight:750;letter-spacing:-2px;margin:4px 0">00:00</div><div class="small" id="focusLabel" style="margin-bottom:14px"></div><button class="primary" onclick="stopFocus()">End session</button></div></div>
-  <div class="panel"><div class="panel-head"><h2>Quick actions</h2></div><div class="quickgrid">
+  <div class="panel"><div class="panel-head"><h2>Focus</h2></div>
+<div id="focusIdle">
+<select id="focusTask" class="field" aria-label="Focus on a task"></select>
+<p class="small" style="margin:12px 0 6px">Choose a timer</p>
+<div class="addrow" style="flex-wrap:wrap">
+<button class="secondary" onclick="startFocus(15)">15 min</button>
+<button class="secondary" onclick="startFocus(30)">30 min</button>
+<button class="secondary" onclick="startFocus(60)">1 hour</button>
+</div>
+<div class="addrow">
+<input id="customFocus" class="field" type="number" min="1" max="180" inputmode="numeric" placeholder="Custom minutes" aria-label="Custom focus minutes">
+<button class="secondary" onclick="startCustomFocus()">Start</button>
+</div>
+<p class="small" style="margin:0">During a session, DAYDIARY pauses its own reminders. It can't block other apps or silence your phone, so turn on Do Not Disturb if you want fewer distractions.</p>
+</div>
+<div id="focusRun" class="hidden">
+<div style="width:190px;height:190px;border:7px solid var(--soft);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:14px auto">
+<div id="focusTime" style="font-size:42px;font-weight:750;letter-spacing:-2px">00:00</div>
+</div>
+<div class="small" id="focusLabel" style="text-align:center;margin-bottom:14px"></div>
+<div class="addrow">
+<button id="focusPause" class="secondary" onclick="pauseFocus()">Pause</button>
+<button id="focusResume" class="secondary" onclick="resumeFocus()" disabled>Resume</button>
+<button class="secondary" onclick="stopFocus()">End session</button>
+</div>
+</div>
+<div id="focusComplete" class="hidden">
+<p style="font-weight:700;margin:14px 0 6px">Focus session complete!</p>
+<p class="small" id="focusBreak" style="margin:0 0 12px">Take a 5-minute break, stretch, and get some water.</p>
+<button class="secondary" onclick="dismissFocusComplete()">Done</button>
+</div>
+<div class="metrics" style="margin:18px 0 0">
+<div class="metric"><div class="eyebrow">FOCUS TODAY</div><div class="num" id="focusToday">0 min</div></div>
+<div class="metric"><div class="eyebrow">THIS WEEK</div><div class="num" id="focusWeek">0 min</div></div>
+</div>
+</div><div class="panel"><div class="panel-head"><h2>Quick actions</h2></div><div class="quickgrid">
    <button class="quick" onclick="go('notes')"><span class="ico">✎</span><span>New note</span></button>
    <button class="quick" onclick="go('planner')"><span class="ico">＋</span><span>Add a task</span></button>
    <button class="quick" onclick="go('progress')"><span class="ico">◉</span><span>Track habits</span></button>
@@ -141,12 +175,57 @@ function setQuote(){$('quote').textContent=QUOTES[Math.floor((Date.now()-new Dat
 function pinNote(id){const n=data.notes.find(x=>x.id===id);if(n){n.pin=!n.pin;save()}}
 function weekHTML(){const ds=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d});return data.habits.length?`<div class="wk"><span></span>${ds.map(d=>`<b>${d.toLocaleDateString(undefined,{weekday:'narrow'})}</b>`).join('')}</div>`+data.habits.map(h=>`<div class="wk"><span class="item-title">${esc(h.name)}</span>${ds.map(d=>{const k=ymd(d),on=has(h.days,k);return `<button class="dot ${on?'on':''}" aria-pressed="${on}" aria-label="${esc(h.name)}, ${d.toLocaleDateString(undefined,{weekday:'long'})}" onclick="toggleHabit('${h.id}','${k}')"></button>`}).join('')}</div>`).join(''):'<div class="empty">Add a habit to see your week.</div>'}
 let focus=null;try{focus=JSON.parse(localStorage.getItem('pulse.focus'))}catch(e){}
+let focusSessions=[];try{focusSessions=JSON.parse(localStorage.getItem('pulse.focusSessions'))||[]}catch(e){}
+if(!Array.isArray(focusSessions))focusSessions=[];
+let focusComplete=false;
 const baseTitle=document.title,fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 function notify(b){try{if(!window.Notification||Notification.permission!=='granted')return;if(navigator.serviceWorker)navigator.serviceWorker.ready.then(r=>r.showNotification('DAYDIARY',{body:b,icon:'icon-192.png'}));else new Notification('DAYDIARY',{body:b})}catch(e){}}
-function startFocus(m){const t=data.tasks.find(x=>x.id===$('focusTask').value);focus={end:Date.now()+m*60000,label:t?t.title:''};try{localStorage.setItem('pulse.focus',JSON.stringify(focus))}catch(e){}toast('Focus on. DAYDIARY reminders are paused.');renderFocus()}
-function stopFocus(done){focus=null;try{localStorage.removeItem('pulse.focus')}catch(e){}document.title=baseTitle;renderFocus();toast(done===true?'Focus session complete. Nice work.':'Focus ended.');if(done===true)notify('Focus session complete')}
-function renderFocus(){$('focusIdle').classList.toggle('hidden',!!focus);$('focusRun').classList.toggle('hidden',!focus);if(focus)$('focusLabel').textContent=focus.label?'Working on: '+focus.label:'Reminders are paused until the timer ends.';tick()}
-function tick(){if(focus){const s=Math.max(0,Math.round((focus.end-Date.now())/1000));if(s<=0){stopFocus(true);return}$('focusTime').textContent=fmt(s);document.title=fmt(s)+' · Focus';return}checkReminders()}
+function saveFocus(){try{localStorage.setItem('pulse.focus',JSON.stringify(focus))}catch(e){}}
+function startFocus(m){
+ if(!Number.isInteger(m)||m<1||m>180){toast('Choose a timer from 1 to 180 minutes.');return}
+ const t=data.tasks.find(x=>x.id===$('focusTask').value);
+ focus={end:Date.now()+m*60000,minutes:m,label:t?t.title:'',paused:false};
+ focusComplete=false;saveFocus();
+ try{if(window.Notification&&Notification.permission==='default')Notification.requestPermission()}catch(e){}
+ toast('Focus session started.');renderFocus();
+}
+function startCustomFocus(){const m=Number($('customFocus').value);if(!Number.isInteger(m)||m<1||m>180){toast('Enter a whole number from 1 to 180.');return}startFocus(m);$('customFocus').value=''}
+function pauseFocus(){if(!focus||focus.paused)return;focus.remaining=Math.max(0,focus.end-Date.now());focus.paused=true;saveFocus();renderFocus()}
+function resumeFocus(){if(!focus||!focus.paused)return;focus.end=Date.now()+Math.max(0,focus.remaining||0);focus.paused=false;delete focus.remaining;saveFocus();renderFocus()}
+function dismissFocusComplete(){focusComplete=false;renderFocus()}
+function stopFocus(done){
+ const completed=done===true&&!!focus;
+ if(completed){focusSessions.push({date:day(),minutes:focus.minutes||0});try{localStorage.setItem('pulse.focusSessions',JSON.stringify(focusSessions))}catch(e){}}
+ focus=null;focusComplete=completed;
+ try{localStorage.removeItem('pulse.focus')}catch(e){}
+ document.title=baseTitle;renderFocus();
+ if(completed){toast('Focus session complete. Nice work!');notify('Focus session complete. Take a 5-minute break.')}
+ else toast('Focus ended.');
+}
+function renderFocus(){
+ $('focusIdle').classList.toggle('hidden',!!focus||focusComplete);
+ $('focusRun').classList.toggle('hidden',!focus);
+ $('focusComplete').classList.toggle('hidden',!focusComplete);
+ if(focus){$('focusLabel').textContent=focus.label?'Working on: '+focus.label:'Stay focused on your task.';$('focusPause').disabled=!!focus.paused;$('focusResume').disabled=!focus.paused}
+ renderFocusStats();
+ if(focus)tick();else checkReminders();
+}
+function renderFocusStats(){
+ const todayMinutes=focusSessions.filter(s=>s.date===day()).reduce((a,s)=>a+(Number(s.minutes)||0),0);
+ const start=new Date();start.setDate(start.getDate()-6);const firstDay=ymd(start);
+ const weekMinutes=focusSessions.filter(s=>s.date>=firstDay&&s.date<=day()).reduce((a,s)=>a+(Number(s.minutes)||0),0);
+ $('focusToday').textContent=todayMinutes+' min';$('focusWeek').textContent=weekMinutes+' min';
+}
+function tick(){
+ if(focus){
+  const s=focus.paused?Math.ceil((focus.remaining||0)/1000):Math.max(0,Math.ceil((focus.end-Date.now())/1000));
+  $('focusTime').textContent=fmt(s);
+  document.title=(focus.paused?'Paused · ':'')+fmt(s)+' · Focus';
+  if(!focus.paused&&s<=0){stopFocus(true);return}
+  return;
+ }
+ document.title=baseTitle;checkReminders();
+}
 function checkReminders(){const d=day(),n=new Date(),hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'),due=data.tasks.filter(t=>!t.done&&!t.notified&&t.time&&t.due&&(t.due<d||(t.due===d&&t.time<=hm)));if(!due.length)return;due.forEach(t=>t.notified=true);save();const m=due.length>1?due.length+' tasks are due':'Due now: '+due[0].title;toast(m);notify(m)}
 const SB='https://pmawzarzgfgynqkallut.supabase.co',KEY='sb_publishable_Aiw1KhVemVc-9FpRHy2NNA__8DDgjZT';
 let sync=(()=>{try{return JSON.parse(localStorage.getItem('pulse.sync'))||{}}catch(e){return{}}})(),busy=false;
@@ -164,7 +243,7 @@ function syncUI(){const on=!!sync.refresh;$('syncOut').classList.toggle('hidden'
 let viewId=null;
 function openNote(id){go('notes');viewId=id;renderNoteView()}
 function renderNoteView(){const n=viewId&&data.notes.find(x=>x.id===viewId);if(viewId&&!n)viewId=null;const v=!!n;['noteForm','noteSearch','notesPanel'].forEach(i=>$(i).classList.toggle('hidden',v));$('noteView').classList.toggle('hidden',!v);if(v)$('noteView').innerHTML=`<div class="note-title" style="font-size:20px;overflow-wrap:anywhere">${esc(n.title)}</div><div class="item-meta">${n.pin?'Pinned · ':''}${new Date(n.date).toLocaleDateString()}${n.edited?' · edited':''}</div><div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5;margin:16px 0">${n.body?esc(n.body):'<span class="small">No text in this note.</span>'}</div><div class="addrow" style="flex-wrap:wrap;margin-bottom:0"><button class="secondary" onclick="go('notes')">All notes</button><button class="secondary" onclick="editNote('${n.id}')">Edit</button><button class="secondary" onclick="pinNote('${n.id}')">${n.pin?'Unpin':'Pin'}</button><button class="secondary" onclick="delNote('${n.id}')">Delete</button></div>`}
-Object.assign(window,{go,addNote,editNote,cancelEdit,delNote,renderNotes,addTask,toggleTask,delTask,addHabit,toggleHabit,delHabit,askPreset,ask,exportData,importData,toggleTheme,pinNote,startFocus,stopFocus,authGo,signOut,syncNow,openNote});
+Object.assign(window,{go,addNote,editNote,cancelEdit,delNote,renderNotes,addTask,toggleTask,delTask,addHabit,toggleHabit,delHabit,askPreset,ask,exportData,importData,toggleTheme,pinNote,startFocus,startCustomFocus,pauseFocus,resumeFocus,dismissFocusComplete,stopFocus,authGo,signOut,syncNow,openNote});
 [[noteTitle,'Note title'],[noteBody,'Note text'],[noteSearch,'Search notes'],[taskInput,'New task'],[habitInput,'New habit'],[prompt,'Ask DAYDIARY']].forEach(([el,l])=>el.setAttribute('aria-label',l));answer.setAttribute('role','status');
 document.querySelector('.tab.active').setAttribute('aria-current','page');setTheme(document.documentElement.dataset.theme||'light');
 const now=new Date(),hour=now.getHours();greeting.textContent=(hour<12?'Good morning.':hour<17?'Good afternoon.':'Good evening.');today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});render();
