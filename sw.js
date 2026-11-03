@@ -1,4 +1,4 @@
-const CACHE_NAME='daydiary-shell-v1';
+const CACHE_NAME='daydiary-shell-v2';
 const CORE_ASSETS=['./','./manifest.json','./icon.svg'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE_ASSETS)));
