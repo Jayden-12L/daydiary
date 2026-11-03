@@ -74,51 +74,41 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
 <div class="shell">
  <header class="top"><div class="brand-lockup"><div class="brand">DAYDIARY</div><button class="header-search" type="button" aria-label="Open search" title="Search" onclick="go('search');setTimeout(()=>$('globalSearch').focus(),0)">⌕</button></div><div style="display:flex;gap:14px;align-items:center"><div class="date" id="today"></div><button class="link" id="themeBtn" style="font-size:18px" aria-label="Toggle dark mode" onclick="toggleTheme()">☾</button></div></header>
  <section id="home" class="view active">
-  <h1 class="page-title" style="margin-top:8px">Dashboard</h1>
+  <h1 class="page-title">Dashboard</h1>
   <p class="greeting" id="greeting" style="font-size:clamp(24px,4vw,32px);letter-spacing:-1px;margin:0 0 8px">Good day.</p>
   <p class="sub">A little more organized. A little more in sync.</p>
   <div id="quote" style="background:var(--soft);border-radius:16px;padding:15px 17px;font-size:15px;line-height:1.5;margin:-8px 0 20px"></div>
-  <div class="panel"><div class="panel-head"><h2>Focus</h2></div>
-   <div id="focusIdle">
-    <select id="focusTask" class="field" aria-label="Focus on a task"></select>
-    <p class="small" style="margin:12px 0 6px">Choose a timer</p>
-    <div class="addrow" style="flex-wrap:wrap">
-     <button class="secondary" onclick="startFocus(15)">15 min</button>
-     <button class="secondary" onclick="startFocus(30)">30 min</button>
-     <button class="secondary" onclick="startFocus(60)">1 hour</button>
+  <div class="metrics">
+   <div class="metric"><div class="eyebrow">DUE TODAY</div><div class="num" id="dashDueToday">0</div><div class="small">Tasks on today's list</div></div>
+   <div class="metric"><div class="eyebrow">TASKS COMPLETED</div><div class="num" id="dashTasksDone">0</div><div class="small">Completed overall</div></div>
+   <div class="metric"><div class="eyebrow">HABITS TODAY</div><div class="num" id="dashHabitsDone">0/0</div><div class="small">Habits checked off</div></div>
+  </div>
+  <div class="panel">
+   <div class="panel-head"><h2>Today's progress</h2><span class="pill" id="dashProgressPercent">0%</span></div>
+   <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <div id="dashProgressRing" role="img" aria-label="0 percent of today's tasks and habits completed" style="width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) 0%,var(--soft) 0%);flex:none">
+     <div style="width:86px;height:86px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:23px;font-weight:750" id="dashRingNumber">0%</div>
     </div>
-    <div class="addrow">
-     <input id="customFocus" class="field" type="number" min="1" max="180" inputmode="numeric" placeholder="Custom minutes" aria-label="Custom focus minutes">
-     <button class="secondary" onclick="startCustomFocus()">Start</button>
-    </div>
-    <p class="small" style="margin:0">During a session, DAYDIARY pauses its own reminders. It can't block other apps or silence your phone, so turn on Do Not Disturb if you want fewer distractions.</p>
+    <div class="item-main"><div class="item-title" id="dashProgressSummary">Let's make today count.</div><div class="item-meta" id="dashProgressDetail">Your daily tasks and habits will appear here.</div></div>
    </div>
-   <div id="focusRun" class="hidden">
-    <div style="width:190px;height:190px;border:7px solid var(--soft);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:14px auto">
-     <div id="focusTime" style="font-size:42px;font-weight:750;letter-spacing:-2px">00:00</div>
-    </div>
-    <div class="small" id="focusLabel" style="text-align:center;margin-bottom:14px"></div>
-    <div class="addrow">
-     <button id="focusPause" class="secondary" onclick="pauseFocus()">Pause</button>
-     <button id="focusResume" class="secondary" onclick="resumeFocus()" disabled>Resume</button>
-     <button class="secondary" onclick="stopFocus()">End session</button>
-    </div>
-   </div>
-   <div id="focusComplete" class="hidden">
-    <p style="font-weight:700;margin:14px 0 6px">Focus session complete!</p>
-    <p class="small" id="focusBreak" style="margin:0 0 12px">Take a 5-minute break, stretch, and get some water.</p>
-    <button class="secondary" onclick="dismissFocusComplete()">Done</button>
-   </div>
-   <div class="metrics" style="margin:18px 0 0">
-    <div class="metric"><div class="eyebrow">FOCUS TODAY</div><div class="num" id="focusToday">0 min</div></div>
-    <div class="metric"><div class="eyebrow">THIS WEEK</div><div class="num" id="focusWeek">0 min</div></div>
-   </div>
+  </div>
+  <div class="panel">
+   <div class="panel-head"><h2>Today's tasks</h2><button class="link" onclick="go('planner')">All tasks →</button></div>
+   <div id="dashTodayTasks"></div>
+  </div>
+  <div class="panel">
+   <div class="panel-head"><h2>Habit streaks</h2><button class="link" onclick="go('progress')">Progress →</button></div>
+   <div id="dashStreaks"></div>
+  </div>
+  <div class="panel">
+   <div class="panel-head"><h2>Coming up</h2><button class="link" onclick="go('planner')">Planner →</button></div>
+   <div id="dashUpcoming"></div>
   </div>
   <div class="panel"><div class="panel-head"><h2>Quick actions</h2></div><div class="quickgrid">
    <button class="quick" onclick="go('notes')"><span class="ico">✎</span><span>New note</span></button>
    <button class="quick" onclick="go('planner')"><span class="ico">＋</span><span>Add a task</span></button>
    <button class="quick" onclick="go('progress')"><span class="ico">◉</span><span>Track habits</span></button>
-   <button class="quick" onclick="go('assistant')"><span class="ico">✧</span><span>Ask DAYDIARY</span></button>
+   <button class="quick" onclick="go('journal')"><span class="ico">▤</span><span>Write journal</span></button>
   </div></div>
   <div class="hidden" aria-hidden="true">
    <span id="taskCount">0</span><span id="taskHint"></span><span id="habitCount">0/0</span>
@@ -162,7 +152,43 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
    <p class="small" id="globalSearchCount" role="status" aria-live="polite" style="margin:10px 0 0">Start typing to search your DAYDIARY.</p></div>
   <div id="globalSearchResults"></div></section>
  <section id="progress" class="view"><h1 class="page-title">Progress</h1><p class="page-sub">Small wins add up.</p>
-  <div class="panel"><div class="panel-head"><h2>Today's progress</h2><span class="pill" id="progressPct">0%</span></div><div class="progressbar"><i id="progressBar"></i></div><p class="small" id="progressLabel">0 of 0 habits completed today</p></div>
+    <div class="panel"><div class="panel-head"><h2>Focus</h2></div>
+   <div id="focusIdle">
+    <select id="focusTask" class="field" aria-label="Focus on a task"></select>
+    <p class="small" style="margin:12px 0 6px">Choose a timer</p>
+    <div class="addrow" style="flex-wrap:wrap">
+     <button class="secondary" onclick="startFocus(15)">15 min</button>
+     <button class="secondary" onclick="startFocus(30)">30 min</button>
+     <button class="secondary" onclick="startFocus(60)">1 hour</button>
+    </div>
+    <div class="addrow">
+     <input id="customFocus" class="field" type="number" min="1" max="180" inputmode="numeric" placeholder="Custom minutes" aria-label="Custom focus minutes">
+     <button class="secondary" onclick="startCustomFocus()">Start</button>
+    </div>
+    <p class="small" style="margin:0">During a session, DAYDIARY pauses its own reminders. It can't block other apps or silence your phone, so turn on Do Not Disturb if you want fewer distractions.</p>
+   </div>
+   <div id="focusRun" class="hidden">
+    <div style="width:190px;height:190px;border:7px solid var(--soft);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:14px auto">
+     <div id="focusTime" style="font-size:42px;font-weight:750;letter-spacing:-2px">00:00</div>
+    </div>
+    <div class="small" id="focusLabel" style="text-align:center;margin-bottom:14px"></div>
+    <div class="addrow">
+     <button id="focusPause" class="secondary" onclick="pauseFocus()">Pause</button>
+     <button id="focusResume" class="secondary" onclick="resumeFocus()" disabled>Resume</button>
+     <button class="secondary" onclick="stopFocus()">End session</button>
+    </div>
+   </div>
+   <div id="focusComplete" class="hidden">
+    <p style="font-weight:700;margin:14px 0 6px">Focus session complete!</p>
+    <p class="small" id="focusBreak" style="margin:0 0 12px">Take a 5-minute break, stretch, and get some water.</p>
+    <button class="secondary" onclick="dismissFocusComplete()">Done</button>
+   </div>
+   <div class="metrics" style="margin:18px 0 0">
+    <div class="metric"><div class="eyebrow">FOCUS TODAY</div><div class="num" id="focusToday">0 min</div></div>
+    <div class="metric"><div class="eyebrow">THIS WEEK</div><div class="num" id="focusWeek">0 min</div></div>
+   </div>
+  </div>
+  <div class="panel"><div class="panel-head"><h2>Today's habit progress</h2><span class="pill" id="progressPct">0%</span></div><div class="progressbar"><i id="progressBar"></i></div><p class="small" id="progressLabel">0 of 0 habits completed today</p></div>
   <div class="panel">
    <div class="panel-head"><h2>Habit calendar</h2><div class="month-controls"><button class="secondary month-nav" onclick="shiftHabitMonth(-1)" aria-label="Previous month">‹</button><button class="secondary month-nav" onclick="shiftHabitMonth(1)" aria-label="Next month">›</button></div></div>
    <div class="month-title" id="habitMonthTitle"></div>
@@ -245,7 +271,27 @@ const tags=[...new Set(data.tasks.map(t=>t.tag).filter(Boolean))].sort(),tf=$('t
 tasksList.innerHTML=shown.length?shown.map(taskHTML).join(''):'<div class="empty">No tasks yet. Add one above.</div>';
 const ft=$('focusTask'),fv=ft.value;ft.innerHTML='<option value="">No specific task</option>'+open.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');if(open.some(t=>t.id===fv))ft.value=fv;$('weekGrid').innerHTML=weekHTML();renderHabitCalendar();
 habitsList.innerHTML=data.habits.length?data.habits.map(h=>{const on=has(h.days,day()),st=streak(h);return `<div class="habit"><button class="check ${on?'done':''}" onclick="toggleHabit('${h.id}')" aria-pressed="${on}" aria-label="Done today: ${esc(h.name)}">${on?'✓':''}</button><div class="item-main"><div class="item-title">${esc(h.name)}</div><div class="item-meta">${st>1?st+'-day streak · ':''}${(h.days||[]).length} days completed</div></div><button class="delete" onclick="delHabit('${h.id}')" aria-label="Delete ${esc(h.name)}">×</button></div>`}).join(''):'<div class="empty">Add a habit to start tracking progress.</div>';
-if(document.activeElement!==noteSearch)renderNotes();renderNoteView();if($('globalSearch'))renderSearch()}
+if(document.activeElement!==noteSearch)renderNotes();renderNoteView();if($('globalSearch'))renderSearch();
+const dueToday=sortT(data.tasks.filter(t=>!t.done&&t.due===day()));
+const doneTasks=data.tasks.filter(t=>t.done).length;
+const completedHabits=data.habits.filter(h=>has(h.days,day())).length;
+const dailyTotal=dueToday.length+data.habits.length;
+const dailyDone=data.tasks.filter(t=>t.done&&t.due===day()).length+completedHabits;
+const dailyPct=dailyTotal?Math.round(dailyDone/dailyTotal*100):0;
+$('dashDueToday').textContent=dueToday.length;
+$('dashTasksDone').textContent=doneTasks;
+$('dashHabitsDone').textContent=completedHabits+'/'+data.habits.length;
+$('dashProgressPercent').textContent=dailyPct+'%';
+$('dashRingNumber').textContent=dailyPct+'%';
+$('dashProgressRing').style.background='conic-gradient(var(--green) '+dailyPct+'%,var(--soft) '+dailyPct+'%)';
+$('dashProgressRing').setAttribute('aria-label',dailyPct+' percent of today\'s tasks and habits completed');
+$('dashProgressSummary').textContent=dailyTotal?(dailyPct===100?'Everything for today is complete!':dailyDone+' of '+dailyTotal+' completed'):'Nothing scheduled for today yet.';
+$('dashProgressDetail').textContent=data.tasks.filter(t=>t.done&&t.due===day()).length+' tasks and '+completedHabits+' habits completed today';
+$('dashTodayTasks').innerHTML=dueToday.length?dueToday.map(taskHTML).join(''):'<div class="empty">No tasks due today. Enjoy the breathing room or add something in Planner.</div>';
+$('dashStreaks').innerHTML=data.habits.length?data.habits.map(h=>{const n=streak(h),on=has(h.days,day());return '<div class="habit"><button class="check '+(on?'done':'')+'" onclick="toggleHabit(\''+h.id+'\')" aria-pressed="'+on+'" aria-label="Done today: '+esc(h.name)+'">'+(on?'✓':'')+'</button><div class="item-main"><div class="item-title">'+esc(h.name)+'</div><div class="item-meta">'+(n?n+' day streak':'Start a streak today')+' · '+(h.days||[]).length+' total days</div></div></div>'}).join(''):'<div class="empty">Add your first habit in Progress.</div>';
+const upcoming=sortT(data.tasks.filter(t=>!t.done&&t.due&&t.due>day())).filter(t=>{const d=new Date(t.due+'T12:00:00'),now=new Date();const limit=new Date();limit.setDate(limit.getDate()+7);return d<=limit}).slice(0,5);
+$('dashUpcoming').innerHTML=upcoming.length?upcoming.map(t=>'<div class="task"><div class="item-main"><div class="item-title">'+esc(t.title)+'</div><div class="task-date">'+new Date(t.due+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})+'</div></div></div>').join(''):'<div class="empty">No upcoming deadlines in the next 7 days.</div>';
+}
 function askPreset(s){prompt.value=s;ask()}
 function ask(){const q=prompt.value.trim().toLowerCase();if(!q)return;const open=sortT(data.tasks.filter(t=>!t.done)),od=open.filter(t=>t.due&&t.due<day()),left=data.habits.filter(h=>!has(h.days,day())),best=Math.max(0,...data.habits.map(streak)),t=re=>re.test(q);let r;
 if(t(/\b(habits?|streaks?|routines?)\b/))r=data.habits.length?`You’ve completed ${data.habits.length-left.length} of ${data.habits.length} habits today${left.length?`. Next up: “${left[0].name}”`:'. Nice work'}. Your longest current streak is ${best} day${best===1?'':'s'}. Keep new habits small enough to repeat on your worst day.`:'Start small: add one habit that takes less than ten minutes, and make it easy to repeat.';
