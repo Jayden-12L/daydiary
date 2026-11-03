@@ -78,7 +78,47 @@ body.compact-layout .metric{padding:14px}
 body.compact-layout .task,body.compact-layout .note,body.compact-layout .habit{padding-top:8px;padding-bottom:8px}
 body.compact-layout .shell{padding-top:25px}
 
-.sync-card{width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow);margin-top:22px}.sync-card .field{width:100%;margin:6px 0 12px}.sync-card .addrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px}.sync-card .addrow button{flex:1}.sync-card label{display:block}</style>
+.sync-card{width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow);margin-top:22px}.sync-card .field{width:100%;margin:6px 0 12px}.sync-card .addrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px}.sync-card .addrow button{flex:1}.sync-card label{display:block}
+/* Interaction polish: consistent, subtle feedback without changing layout. */
+button{
+ transition:background-color .18s ease,border-color .18s ease,color .18s ease,
+ box-shadow .18s ease,transform .18s cubic-bezier(.2,.7,.2,1),opacity .18s ease;
+}
+button:active:not(:disabled){transform:scale(.975)}
+button:disabled{cursor:not-allowed;opacity:.48}
+button:focus-visible,input:focus-visible,textarea:focus-visible{
+ outline:2px solid var(--green);outline-offset:3px;
+}
+.tab{transition:background-color .2s ease,color .2s ease,transform .2s ease,box-shadow .2s ease}
+.tab:hover{background:var(--soft);color:var(--ink)}
+.tab.active{transform:translateY(-1px)}
+.tab b{transition:transform .2s cubic-bezier(.2,.7,.2,1)}
+.tab.active b{transform:scale(1.08)}
+.quick,.secondary,.month-cell,.metric,.panel,.suggestion{
+ transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+.quick:hover,.secondary:hover,.month-cell:not(:disabled):hover{
+ border-color:color-mix(in srgb,var(--green) 38%,var(--line));
+ box-shadow:0 5px 18px rgba(20,30,40,.07),inset 0 1px 0 rgba(255,255,255,.5);
+ transform:translateY(-1px);
+}
+.primary:hover{filter:brightness(1.06);box-shadow:0 5px 16px color-mix(in srgb,var(--green) 22%,transparent)}
+.link:hover,.delete:hover{color:var(--ink)}
+.field{transition:border-color .18s ease,background-color .18s ease,box-shadow .18s ease}
+.field:focus{border-color:var(--green);box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 13%,transparent)}
+:root[data-theme=dark] .quick:hover,
+:root[data-theme=dark] .secondary:hover,
+:root[data-theme=dark] .month-cell:not(:disabled):hover{
+ box-shadow:0 6px 20px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.1);
+}
+@media(hover:none){
+ .quick:hover,.secondary:hover,.month-cell:not(:disabled):hover{transform:none;box-shadow:none}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+
+</style>
 </head>
 <body>
 <div id="runtimeStatus" role="status" class="hidden" style="margin:12px auto 0;max-width:1080px;padding:9px 12px;border-radius:12px;background:#fff3cd;color:#705500;font-size:12px"></div>
