@@ -188,7 +188,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
 <body>
 <div id="runtimeStatus" role="status" class="hidden" style="margin:12px auto 0;max-width:1080px;padding:9px 12px;border-radius:12px;background:#fff3cd;color:#705500;font-size:12px"></div>
 <div class="shell">
- <header class="top"><div class="brand-lockup"><div class="brand">DAYDIARY</div><button class="header-search" type="button" aria-label="Open search" title="Search" onclick="go('search');setTimeout(()=>$('globalSearch').focus(),0)">⌕</button></div><div style="display:flex;gap:10px;align-items:center"><div class="date" id="today"></div><button class="link" id="themeBtn" style="font-size:18px" aria-label="Toggle dark mode" onclick="toggleTheme()">☾</button></div></header>
+ <header class="top"><div class="brand-lockup"><div class="brand">DAYDIARY</div><button class="header-search" type="button" aria-label="Open search" title="Search" onclick="go('search');setTimeout(()=>$('globalSearch').focus(),0)">⌕</button></div><div style="display:flex;gap:10px;align-items:center"><div class="date" id="today"></div><button class="link" id="themeBtn" style="font-size:13px;font-weight:650" aria-label="Switch appearance" onclick="toggleTheme()">Dark mode</button></div></header>
  <section id="home" class="view active">
   <h1 class="page-title">Dashboard</h1>
   <p class="greeting" id="greeting" style="font-size:clamp(24px,4vw,32px);letter-spacing:-1px;margin:0 0 8px">Good day.</p>
@@ -259,17 +259,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{
    <input class="field" id="journalDate" type="date" style="margin-bottom:14px" onchange="loadJournalDate()">
    <label class="small" for="journalMood" style="display:block;margin-bottom:7px">How are you feeling?</label>
    <select class="field" id="journalMood" style="margin-bottom:14px">
-    <option value="">Choose a mood (optional)</option><option value="Great">😊 Great</option><option value="Good">🙂 Good</option><option value="Okay">😐 Okay</option><option value="Tired">😴 Tired</option><option value="Stressed">😟 Stressed</option><option value="Sad">🙁 Sad</option><option value="Excited">🤩 Excited</option>
+    <option value="">Choose a mood (optional)</option><option value="Great">Great</option><option value="Good">Good</option><option value="Okay">Okay</option><option value="Tired">Tired</option><option value="Stressed">Stressed</option><option value="Sad">Sad</option><option value="Excited">Excited</option>
    </select>
    <div class="panel-head" style="margin-bottom:8px"><label class="small" for="journalBody">Your thoughts</label><button class="link" onclick="journalPrompt()">Give me a prompt ↗</button></div>
    <div class="suggestion" id="journalPromptText" style="margin:0 0 12px">What was one good moment from today?</div>
    <textarea class="field" id="journalBody" rows="8" placeholder="Write whatever is on your mind..." oninput="updateJournalWordCount()"></textarea>
    <div class="addrow" style="justify-content:space-between;align-items:center"><span class="small" id="journalSaveStatus">Your entries stay in DAYDIARY.</span><button class="primary" onclick="saveJournalEntry()">Save entry</button></div>
-  </div>
-  <div class="panel">
-   <div class="panel-head"><h2>Journal calendar</h2><div class="month-controls"><button class="secondary month-nav" onclick="shiftJournalMonth(-1)" aria-label="Previous month">‹</button><button class="secondary month-nav" onclick="shiftJournalMonth(1)" aria-label="Next month">›</button></div></div>
-   <div class="month-title" id="journalMonthTitle"></div><div class="month-grid" id="journalMonthGrid" aria-label="Journal entry calendar"></div>
-   <p class="small" style="margin:10px 0 0">A dot marks days with a saved journal entry.</p>
   </div>
   <div class="panel">
    <div class="panel-head"><h2>Past entries</h2><span class="pill" id="journalEntryCount">0 entries</span></div>
@@ -474,7 +469,7 @@ function saveDisplayName(){customization.name=($('displayName').value||'').trim(
 function setLayout(value){customization.layout=value==='compact'?'compact':'comfortable';saveCustomization();applyCustomization()}
 function resetCustomization(){customization={};saveCustomization();applyCustomization();toast('Appearance settings reset.')}
 function updateGreeting(){const h=new Date().getHours(),g=h<12?'Good morning':h<17?'Good afternoon':'Good evening',name=(customization.name||'').trim();$('greeting').textContent=g+(name?', '+name:'')+'.'}
-function setTheme(t){document.documentElement.dataset.theme=t;$('themeBtn').textContent=t==='dark'?'☀':'☾';document.querySelector('meta[name=theme-color]').content=t==='dark'?'#0f1013':'#f5f5f7'}
+function setTheme(t){document.documentElement.dataset.theme=t;$('themeBtn').textContent=t==='dark'?'Light mode':'Dark mode';$('themeBtn').setAttribute('aria-label',t==='dark'?'Switch to light mode':'Switch to dark mode');document.querySelector('meta[name=theme-color]').content=t==='dark'?'#0f1013':'#f5f5f7'}
 function toggleTheme(){const t=document.documentElement.dataset.theme==='dark'?'light':'dark';setTheme(t);try{localStorage.setItem('pulse.theme',t)}catch(e){}}
 const QUOTES=['Small steps, repeated daily, beat big plans left for later.','Start with the next small thing.','You don’t need more time, just a clear first step.','Done is a good place to begin.','Rest is part of the plan, not a break from it.','Make it easy to start and hard to skip.','One focused hour can change a whole day.','Progress rarely feels dramatic while it’s happening.','Decide what matters, then protect it.','A messy start still counts.','Consistency is quiet, and it adds up.','Do the hard thing first, while it’s still small.','Your future self will thank you for ten minutes today.','Clear your head by writing it down.','Write it down so your mind can rest.','Today is a good day to finish something small.','Enough effort, repeated, becomes a habit.','Slow progress is still progress.','Choose one thing and give it your full attention.','Begin before you feel ready.','Tidy the small things and the big ones get lighter.','Notice what went well today.','A short walk can fix a long afternoon.','Plan lightly, then follow through.','What you do most days matters more than what you do once.','Ask what the next step is, not what the whole path is.','Protect your mornings and your evenings will thank you.','Take the pressure off and keep the habit.','Good days are built from ordinary hours.','You can pause without quitting.','Make tomorrow easier before you go to bed.','Be kind to yourself and keep going.','Finish one task before you open another.','Your attention is worth guarding.','Look back at how far you’ve come this week.','Keep your promises to yourself.','Less rushing, more doing.','A clear list makes a quieter mind.','Some days the win is simply showing up.','Turn the big goal into a ten-minute start.','Rest, then return with fresh eyes.','Little by little is still a lot.','Say no to something so you can say yes to what matters.','Today counts, even if it’s ordinary.','Keep the streak, but don’t fear breaking it.'];
 function setQuote(){$('quote').textContent=QUOTES[Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5)%QUOTES.length]}
@@ -547,7 +542,6 @@ function weekHTML(){const ds=[...Array(7)].map((_,i)=>{const d=new Date();d.setD
 const journalPrompts=[
  "What was one good moment from today?","What challenged you today, and what did you learn?","What is something you are grateful for?","What is one thing you want to remember about today?","What made you smile today?","What is one thing you would like to do differently tomorrow?","When did you feel most focused or energized today?","What is something kind someone did for you?","What is one small win you can celebrate?","What are you looking forward to?"
 ];
-let journalCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 function journalPrompt(){const current=$('journalPromptText').textContent,choices=journalPrompts.filter(p=>p!==current);$('journalPromptText').textContent=choices[Math.floor(Math.random()*choices.length)]}
 function updateJournalWordCount(){const n=$('journalBody').value.trim().split(/\\s+/).filter(Boolean).length;$('journalWordCount').textContent=n+' word'+(n===1?'':'s')}
 function loadJournalDate(){
@@ -560,24 +554,12 @@ function loadJournalDate(){
 }
 function saveJournalEntry(){
  const date=$('journalDate').value||day(),body=$('journalBody').value.trim(),mood=$('journalMood').value,index=data.journal.findIndex(e=>e.date===date);
- if(!body&&!mood){if(index>=0){data.journal.splice(index,1);save();loadJournalDate();renderJournalCalendar();renderJournalHistory();toast('Journal entry deleted');return}toast('Write something or choose a mood first.');return}
+ if(!body&&!mood){if(index>=0){data.journal.splice(index,1);save();loadJournalDate();renderJournalHistory();toast('Journal entry deleted');return}toast('Write something or choose a mood first.');return}
  const entry={id:index>=0?data.journal[index].id:makeId(),date,body,mood,updated:Date.now()};
  if(index>=0)data.journal[index]=entry;else data.journal.push(entry);
- save();loadJournalDate();renderJournalCalendar();renderJournalHistory();toast('Journal entry saved');
+ save();loadJournalDate();renderJournalHistory();toast('Journal entry saved');
 }
-function shiftJournalMonth(delta){journalCalendarMonth=new Date(journalCalendarMonth.getFullYear(),journalCalendarMonth.getMonth()+delta,1);renderJournalCalendar()}
-function selectJournalDate(date){$('journalDate').value=date;loadJournalDate();renderJournalCalendar()}
-function renderJournalCalendar(){
- const y=journalCalendarMonth.getFullYear(),m=journalCalendarMonth.getMonth(),first=new Date(y,m,1),offset=first.getDay(),count=new Date(y,m+1,0).getDate();
- $('journalMonthTitle').textContent=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
- let html=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>'<div class="month-weekday">'+x+'</div>').join('');
- for(let i=0;i<offset;i++)html+='<div aria-hidden="true"></div>';
- for(let n=1;n<=count;n++){
-  const date=ymd(new Date(y,m,n)),entry=data.journal.find(e=>e.date===date),selected=$('journalDate').value===date;
-  html+=`<button class="month-cell ${selected?'selected':''} ${date===day()?'today':''}" onclick="selectJournalDate('${date}')" aria-pressed="${selected}" aria-label="${new Date(date+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}${entry?', journal entry saved':''}"><span class="month-day">${n}</span><span class="month-count">${entry?'●':' '}</span></button>`;
- }
- $('journalMonthGrid').innerHTML=html;
-}
+function selectJournalDate(date){$('journalDate').value=date;loadJournalDate()}
 function renderJournalHistory(){
  const q=($('journalSearch').value||'').trim().toLowerCase(),entries=[...data.journal].filter(e=>(e.body+' '+e.mood+' '+e.date).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
  $('journalEntryCount').textContent=entries.length+' entr'+(entries.length===1?'y':'ies');
@@ -675,7 +657,7 @@ function renderNoteView(){const n=viewId&&data.notes.find(x=>x.id===viewId);if(v
 Object.assign(window,{shiftTaskMonth,selectTaskDate,go,addNote,editNote,cancelEdit,delNote,renderNotes,renderSearch,addTask,toggleTask,delTask,addHabit,toggleHabit,delHabit,askPreset,ask,exportData,importData,toggleTheme,pinNote,startFocus,startCustomFocus,pauseFocus,resumeFocus,dismissFocusComplete,stopFocus,authGo,signOut,syncNow,openNote});
 [[noteTitle,'Note title'],[noteBody,'Note text'],[noteSearch,'Search notes'],[taskInput,'New task'],[habitInput,'New habit'],[prompt,'Ask DAYDIARY']].forEach(([el,l])=>el.setAttribute('aria-label',l));answer.setAttribute('role','status');
 document.querySelector('.tab.active').setAttribute('aria-current','page');setTheme(document.documentElement.dataset.theme||'light');applyCustomization();
-const now=new Date();updateGreeting();today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});$('journalDate').value=day();render();loadJournalDate();renderJournalCalendar();renderJournalHistory();
+const now=new Date();updateGreeting();today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});$('journalDate').value=day();render();loadJournalDate();renderJournalHistory();
 try{localStorage.setItem('__pulse_test__','1');localStorage.removeItem('__pulse_test__')}catch(e){const s=$('runtimeStatus');s.textContent='Saving isn’t available in this browser, so changes will be lost when you close the page.';s.classList.remove('hidden')}
 $('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});$('habitInput').addEventListener('keydown',e=>{if(e.key==='Enter')addHabit()});$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter')ask()});
 setQuote();renderFocus();setInterval(tick,1000);document.addEventListener('visibilitychange',()=>{tick();setQuote()});syncUI();syncNow();setInterval(syncNow,60000);window.addEventListener('online',syncNow);document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncNow()});$('syPass').addEventListener('keydown',e=>{if(e.key==='Enter')authGo('in')});if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
