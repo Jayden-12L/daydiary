@@ -18,6 +18,13 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
 .wk{display:grid;grid-template-columns:minmax(0,1fr) repeat(7,30px);gap:6px;align-items:center;padding:7px 0}.wk b{font-size:11px;color:var(--muted);text-align:center;font-weight:650}.wk .item-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dot{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--check);background:var(--card);padding:0;justify-self:center}.dot.on{background:var(--green);border-color:var(--green)}
 .note[role=button]{cursor:pointer}
 
+.journal-history-item{display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);padding:13px 0}
+.journal-history-item:first-child{border-top:0}
+.journal-history-date{display:block;font-size:13px;font-weight:700}
+.journal-history-mood{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.journal-history-body{display:block;font-size:13px;color:var(--muted);margin-top:5px;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+
+
 .month-controls{display:flex;gap:7px}.month-nav{min-width:38px;padding:7px 11px;font-size:20px;line-height:1}
 .month-title{font-size:14px;font-weight:700;margin:-4px 0 14px}
 .month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
@@ -102,6 +109,31 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
   <div class="panel" id="noteForm"><div class="formstack"><input id="noteTitle" class="field" placeholder="Note title"><textarea id="noteBody" class="field" placeholder="Write something down..."></textarea><div class="addrow" style="margin:0"><button id="noteSave" class="primary" onclick="addNote()">Save note</button><button id="noteCancel" class="secondary hidden" onclick="cancelEdit()">Cancel</button></div></div></div>
   <input class="field search" id="noteSearch" placeholder="⌕  Search notes" oninput="renderNotes()"><div class="panel" id="notesPanel"><div id="notesList"></div></div><div class="panel hidden" id="noteView"></div>
  </section>
+ <section id="journal" class="view"><h1 class="page-title">Journal</h1><p class="page-sub">A little space to reflect on your day.</p>
+  <div class="panel">
+   <div class="panel-head"><h2 id="journalEditorTitle">Today's entry</h2><span class="pill" id="journalWordCount">0 words</span></div>
+   <label class="small" for="journalDate" style="display:block;margin-bottom:7px">Entry date</label>
+   <input class="field" id="journalDate" type="date" style="margin-bottom:14px" onchange="loadJournalDate()">
+   <label class="small" for="journalMood" style="display:block;margin-bottom:7px">How are you feeling?</label>
+   <select class="field" id="journalMood" style="margin-bottom:14px">
+    <option value="">Choose a mood (optional)</option><option value="Great">😊 Great</option><option value="Good">🙂 Good</option><option value="Okay">😐 Okay</option><option value="Tired">😴 Tired</option><option value="Stressed">😟 Stressed</option><option value="Sad">🙁 Sad</option><option value="Excited">🤩 Excited</option>
+   </select>
+   <div class="panel-head" style="margin-bottom:8px"><label class="small" for="journalBody">Your thoughts</label><button class="link" onclick="journalPrompt()">Give me a prompt ↗</button></div>
+   <div class="suggestion" id="journalPromptText" style="margin:0 0 12px">What was one good moment from today?</div>
+   <textarea class="field" id="journalBody" rows="8" placeholder="Write whatever is on your mind..." oninput="updateJournalWordCount()"></textarea>
+   <div class="addrow" style="justify-content:space-between;align-items:center"><span class="small" id="journalSaveStatus">Your entries stay in DAYDIARY.</span><button class="primary" onclick="saveJournalEntry()">Save entry</button></div>
+  </div>
+  <div class="panel">
+   <div class="panel-head"><h2>Journal calendar</h2><div class="month-controls"><button class="secondary month-nav" onclick="shiftJournalMonth(-1)" aria-label="Previous month">‹</button><button class="secondary month-nav" onclick="shiftJournalMonth(1)" aria-label="Next month">›</button></div></div>
+   <div class="month-title" id="journalMonthTitle"></div><div class="month-grid" id="journalMonthGrid" aria-label="Journal entry calendar"></div>
+   <p class="small" style="margin:10px 0 0">A dot marks days with a saved journal entry.</p>
+  </div>
+  <div class="panel">
+   <div class="panel-head"><h2>Past entries</h2><span class="pill" id="journalEntryCount">0 entries</span></div>
+   <input class="field search" id="journalSearch" placeholder="⌕  Search your journal" oninput="renderJournalHistory()">
+   <div id="journalHistory"></div>
+  </div>
+ </section>
  <section id="progress" class="view"><h1 class="page-title">Progress</h1><p class="page-sub">Small wins add up.</p>
   <div class="panel"><div class="panel-head"><h2>Today's progress</h2><span class="pill" id="progressPct">0%</span></div><div class="progressbar"><i id="progressBar"></i></div><p class="small" id="progressLabel">0 of 0 habits completed today</p></div>
   <div class="panel">
@@ -133,6 +165,7 @@ h1:focus{outline:none}.overdue-t{color:var(--red);font-weight:650}.noteacts{disp
 <nav class="tabs" aria-label="Main">
  <button class="tab active" data-tab="home" onclick="go('home')"><b>⌂</b>Home</button>
  <button class="tab" data-tab="notes" onclick="go('notes')"><b>▤</b>Notes</button>
+ <button class="tab" data-tab="journal" onclick="go('journal')"><b>✎</b>Journal</button>
  <button class="tab" data-tab="progress" onclick="go('progress')"><b>◉</b>Progress</button>
  <button class="tab" data-tab="planner" onclick="go('planner')"><b>▦</b>Planner</button>
  <button class="tab" data-tab="assistant" onclick="go('assistant')"><b>✧</b>Assistant</button>
@@ -149,10 +182,11 @@ const prompt = $('prompt'), answer = $('answer');
 const makeId = () => (window.crypto && typeof window.crypto.randomUUID === 'function') ? window.crypto.randomUUID() : 'p-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
 const key='pulse.web.v1';
 let data;
-try{data=JSON.parse(localStorage.getItem(key))||{notes:[{id:makeId(),title:'Welcome to DAYDIARY',body:'Your personal command center. Add notes, build habits, and organize your day.',date:Date.now()}],tasks:[],habits:[{id:makeId(),name:'Read',days:[]},{id:makeId(),name:'Practice an instrument',days:[]},{id:makeId(),name:'Get ready for tomorrow',days:[]}]}}catch(e){data={notes:[],tasks:[],habits:[]}}
+try{data=JSON.parse(localStorage.getItem(key))||{journal:[],notes:[{id:makeId(),title:'Welcome to DAYDIARY',body:'Your personal command center. Add notes, build habits, and organize your day.',date:Date.now()}],tasks:[],habits:[{id:makeId(),name:'Read',days:[]},{id:makeId(),name:'Practice an instrument',days:[]},{id:makeId(),name:'Get ready for tomorrow',days:[]}]}}catch(e){data={notes:[],tasks:[],habits:[]}}
 const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const day=()=>ymd(new Date()),isDay=s=>/^\d{4}-\d\d-\d\d$/.test(s),has=(a,d)=>(a||[]).includes(d);
-['notes','tasks','habits'].forEach(k=>{if(!Array.isArray(data[k]))data[k]=[]});
+['notes','tasks','habits','journal'].forEach(k=>{if(!Array.isArray(data[k]))data[k]=[]});
+data.journal=data.journal.filter(e=>e&&isDay(e.date)).map(e=>({id:e.id||makeId(),date:e.date,body:String(e.body||''),mood:String(e.mood||''),updated:+e.updated||Date.now()}));
 const sortT=a=>[...a].sort((x,y)=>(!!x.done-!!y.done)||(x.due||'9999').localeCompare(y.due||'9999')||((y.pri||0)-(x.pri||0))),sortN=a=>[...a].sort((x,y)=>!!y.pin-!!x.pin);
 function streak(h){const s=new Set(h.days||[]),d=new Date();if(!s.has(ymd(d)))d.setDate(d.getDate()-1);let n=0;while(s.has(ymd(d))){n++;d.setDate(d.getDate()-1)}return n}
 function persist(){try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}}
@@ -195,7 +229,7 @@ else if(t(/\b(hi|hello|hey)\b/))r='Hi! Ask me about your day, tasks, habits, or 
 else r='I can help with simple planning using your saved DAYDIARY information. Try asking about your day, tasks, habits, or notes. This starter assistant works offline and is not a general-purpose AI chatbot.';
 answer.textContent=r;answer.classList.remove('hidden')}
 function exportData(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='daydiary-backup-'+day()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Backup downloaded')}
-function importData(e){const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!['notes','tasks','habits'].every(k=>Array.isArray(d[k])))throw 0;if(!confirm('Replace everything in DAYDIARY with this backup?'))return;data={notes:d.notes.map(n=>({id:makeId(),title:String(n.title||''),body:String(n.body||''),date:+n.date||Date.now(),edited:n.edited?+n.edited:undefined,pin:!!n.pin})),tasks:d.tasks.map(t=>({id:makeId(),title:String(t.title||''),due:isDay(t.due)?t.due:'',done:!!t.done,pri:[1,2,3].includes(+t.pri)?+t.pri:0,rep:['daily','weekly','monthly'].includes(t.rep)?t.rep:'',tag:String(t.tag||'').slice(0,20),time:/^\d\d:\d\d$/.test(t.time)?t.time:''})),habits:d.habits.map(h=>({id:makeId(),name:String(h.name||''),days:Array.isArray(h.days)?h.days.filter(isDay):[]}))};save();toast('Backup imported')}catch(_){toast('That file isn’t a DAYDIARY backup.')}};r.readAsText(f)}
+function importData(e){const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!['notes','tasks','habits'].every(k=>Array.isArray(d[k]))||(d.journal!==undefined&&!Array.isArray(d.journal)))throw 0;if(!confirm('Replace everything in DAYDIARY with this backup?'))return;data={journal:(d.journal||[]).filter(e=>e&&isDay(e.date)).map(e=>({id:makeId(),date:e.date,body:String(e.body||''),mood:String(e.mood||''),updated:+e.updated||Date.now()})),notes:d.notes.map(n=>({id:makeId(),title:String(n.title||''),body:String(n.body||''),date:+n.date||Date.now(),edited:n.edited?+n.edited:undefined,pin:!!n.pin})),tasks:d.tasks.map(t=>({id:makeId(),title:String(t.title||''),due:isDay(t.due)?t.due:'',done:!!t.done,pri:[1,2,3].includes(+t.pri)?+t.pri:0,rep:['daily','weekly','monthly'].includes(t.rep)?t.rep:'',tag:String(t.tag||'').slice(0,20),time:/^\d\d:\d\d$/.test(t.time)?t.time:''})),habits:d.habits.map(h=>({id:makeId(),name:String(h.name||''),days:Array.isArray(h.days)?h.days.filter(isDay):[]}))};save();toast('Backup imported')}catch(_){toast('That file isn’t a DAYDIARY backup.')}};r.readAsText(f)}
 function setTheme(t){document.documentElement.dataset.theme=t;$('themeBtn').textContent=t==='dark'?'☀':'☾';document.querySelector('meta[name=theme-color]').content=t==='dark'?'#0f1013':'#f5f5f7'}
 function toggleTheme(){const t=document.documentElement.dataset.theme==='dark'?'light':'dark';setTheme(t);try{localStorage.setItem('pulse.theme',t)}catch(e){}}
 const QUOTES=['Small steps, repeated daily, beat big plans left for later.','Start with the next small thing.','You don’t need more time, just a clear first step.','Done is a good place to begin.','Rest is part of the plan, not a break from it.','Make it easy to start and hard to skip.','One focused hour can change a whole day.','Progress rarely feels dramatic while it’s happening.','Decide what matters, then protect it.','A messy start still counts.','Consistency is quiet, and it adds up.','Do the hard thing first, while it’s still small.','Your future self will thank you for ten minutes today.','Clear your head by writing it down.','Write it down so your mind can rest.','Today is a good day to finish something small.','Enough effort, repeated, becomes a habit.','Slow progress is still progress.','Choose one thing and give it your full attention.','Begin before you feel ready.','Tidy the small things and the big ones get lighter.','Notice what went well today.','A short walk can fix a long afternoon.','Plan lightly, then follow through.','What you do most days matters more than what you do once.','Ask what the next step is, not what the whole path is.','Protect your mornings and your evenings will thank you.','Take the pressure off and keep the habit.','Good days are built from ordinary hours.','You can pause without quitting.','Make tomorrow easier before you go to bed.','Be kind to yourself and keep going.','Finish one task before you open another.','Your attention is worth guarding.','Look back at how far you’ve come this week.','Keep your promises to yourself.','Less rushing, more doing.','A clear list makes a quieter mind.','Some days the win is simply showing up.','Turn the big goal into a ten-minute start.','Rest, then return with fresh eyes.','Little by little is still a lot.','Say no to something so you can say yes to what matters.','Today counts, even if it’s ordinary.','Keep the streak, but don’t fear breaking it.'];
@@ -238,6 +272,46 @@ function renderHabitDayDetails(){
  $('habitDayDetails').innerHTML=`<div class="selected-day-title">${label} · ${completed}/${data.habits.length} completed</div>${rows}`;
 }
 function weekHTML(){const ds=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d});return data.habits.length?`<div class="wk"><span></span>${ds.map(d=>`<b>${d.toLocaleDateString(undefined,{weekday:'narrow'})}</b>`).join('')}</div>`+data.habits.map(h=>`<div class="wk"><span class="item-title">${esc(h.name)}</span>${ds.map(d=>{const k=ymd(d),on=has(h.days,k);return `<button class="dot ${on?'on':''}" aria-pressed="${on}" aria-label="${esc(h.name)}, ${d.toLocaleDateString(undefined,{weekday:'long'})}" onclick="toggleHabit('${h.id}','${k}')"></button>`}).join('')}</div>`).join(''):'<div class="empty">Add a habit to see your week.</div>'}
+const journalPrompts=[
+ "What was one good moment from today?","What challenged you today, and what did you learn?","What is something you are grateful for?","What is one thing you want to remember about today?","What made you smile today?","What is one thing you would like to do differently tomorrow?","When did you feel most focused or energized today?","What is something kind someone did for you?","What is one small win you can celebrate?","What are you looking forward to?"
+];
+let journalCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+function journalPrompt(){const current=$('journalPromptText').textContent,choices=journalPrompts.filter(p=>p!==current);$('journalPromptText').textContent=choices[Math.floor(Math.random()*choices.length)]}
+function updateJournalWordCount(){const n=$('journalBody').value.trim().split(/\\s+/).filter(Boolean).length;$('journalWordCount').textContent=n+' word'+(n===1?'':'s')}
+function loadJournalDate(){
+ const date=$('journalDate').value||day(),entry=data.journal.find(e=>e.date===date);
+ $('journalEditorTitle').textContent=date===day()?"Today's entry":new Date(date+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'});
+ $('journalMood').value=entry?entry.mood:'';
+ $('journalBody').value=entry?entry.body:'';
+ $('journalSaveStatus').textContent=entry?'Saved '+new Date(entry.updated).toLocaleString():'Not saved yet';
+ updateJournalWordCount();
+}
+function saveJournalEntry(){
+ const date=$('journalDate').value||day(),body=$('journalBody').value.trim(),mood=$('journalMood').value,index=data.journal.findIndex(e=>e.date===date);
+ if(!body&&!mood){if(index>=0){data.journal.splice(index,1);save();loadJournalDate();renderJournalCalendar();renderJournalHistory();toast('Journal entry deleted');return}toast('Write something or choose a mood first.');return}
+ const entry={id:index>=0?data.journal[index].id:makeId(),date,body,mood,updated:Date.now()};
+ if(index>=0)data.journal[index]=entry;else data.journal.push(entry);
+ save();loadJournalDate();renderJournalCalendar();renderJournalHistory();toast('Journal entry saved');
+}
+function shiftJournalMonth(delta){journalCalendarMonth=new Date(journalCalendarMonth.getFullYear(),journalCalendarMonth.getMonth()+delta,1);renderJournalCalendar()}
+function selectJournalDate(date){$('journalDate').value=date;loadJournalDate();renderJournalCalendar()}
+function renderJournalCalendar(){
+ const y=journalCalendarMonth.getFullYear(),m=journalCalendarMonth.getMonth(),first=new Date(y,m,1),offset=first.getDay(),count=new Date(y,m+1,0).getDate();
+ $('journalMonthTitle').textContent=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+ let html=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>'<div class="month-weekday">'+x+'</div>').join('');
+ for(let i=0;i<offset;i++)html+='<div aria-hidden="true"></div>';
+ for(let n=1;n<=count;n++){
+  const date=ymd(new Date(y,m,n)),entry=data.journal.find(e=>e.date===date),selected=$('journalDate').value===date;
+  html+=`<button class="month-cell ${selected?'selected':''} ${date===day()?'today':''}" onclick="selectJournalDate('${date}')" aria-pressed="${selected}" aria-label="${new Date(date+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}${entry?', journal entry saved':''}"><span class="month-day">${n}</span><span class="month-count">${entry?'●':' '}</span></button>`;
+ }
+ $('journalMonthGrid').innerHTML=html;
+}
+function renderJournalHistory(){
+ const q=($('journalSearch').value||'').trim().toLowerCase(),entries=[...data.journal].filter(e=>(e.body+' '+e.mood+' '+e.date).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
+ $('journalEntryCount').textContent=entries.length+' entr'+(entries.length===1?'y':'ies');
+ $('journalHistory').innerHTML=entries.length?entries.map(e=>`<button class="journal-history-item" onclick="selectJournalDate('${e.date}')"><span class="journal-history-date">${new Date(e.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</span><span class="journal-history-mood">${e.mood?esc(e.mood)+' · ':''}</span><span class="journal-history-body">${esc(e.body||'Mood check-in')}</span></button>`).join(''):'<div class="empty">'+(q?'No entries match your search.':'Your saved entries will appear here.')+'</div>';
+}
+
 let focus=null;try{focus=JSON.parse(localStorage.getItem('pulse.focus'))}catch(e){}
 let focusSessions=[];try{focusSessions=JSON.parse(localStorage.getItem('pulse.focusSessions'))||[]}catch(e){}
 if(!Array.isArray(focusSessions))focusSessions=[];
@@ -310,7 +384,7 @@ function renderNoteView(){const n=viewId&&data.notes.find(x=>x.id===viewId);if(v
 Object.assign(window,{go,addNote,editNote,cancelEdit,delNote,renderNotes,addTask,toggleTask,delTask,addHabit,toggleHabit,delHabit,askPreset,ask,exportData,importData,toggleTheme,pinNote,startFocus,startCustomFocus,pauseFocus,resumeFocus,dismissFocusComplete,stopFocus,authGo,signOut,syncNow,openNote});
 [[noteTitle,'Note title'],[noteBody,'Note text'],[noteSearch,'Search notes'],[taskInput,'New task'],[habitInput,'New habit'],[prompt,'Ask DAYDIARY']].forEach(([el,l])=>el.setAttribute('aria-label',l));answer.setAttribute('role','status');
 document.querySelector('.tab.active').setAttribute('aria-current','page');setTheme(document.documentElement.dataset.theme||'light');
-const now=new Date(),hour=now.getHours();greeting.textContent=(hour<12?'Good morning.':hour<17?'Good afternoon.':'Good evening.');today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});render();
+const now=new Date(),hour=now.getHours();greeting.textContent=(hour<12?'Good morning.':hour<17?'Good afternoon.':'Good evening.');today.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});$('journalDate').value=day();render();loadJournalDate();renderJournalCalendar();renderJournalHistory();
 try{localStorage.setItem('__pulse_test__','1');localStorage.removeItem('__pulse_test__')}catch(e){const s=$('runtimeStatus');s.textContent='Saving isn’t available in this browser, so changes will be lost when you close the page.';s.classList.remove('hidden')}
 $('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});$('habitInput').addEventListener('keydown',e=>{if(e.key==='Enter')addHabit()});$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter')ask()});
 setQuote();renderFocus();setInterval(tick,1000);document.addEventListener('visibilitychange',()=>{tick();setQuote()});syncUI();syncNow();setInterval(syncNow,60000);window.addEventListener('online',syncNow);document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncNow()});$('syPass').addEventListener('keydown',e=>{if(e.key==='Enter')authGo('in')});if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
