@@ -529,7 +529,7 @@ tasksList.innerHTML=shown.length?shown.map(taskHTML).join(''):'<div class="empty
 const ft=$('focusTask'),fv=ft.value;ft.innerHTML='<option value="">No specific task</option>'+open.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');if(open.some(t=>t.id===fv))ft.value=fv;renderActivityCalendar();updateDailyScore();
 $('progressTaskTotal').textContent=data.tasks.length;
 $('progressTasksList').innerHTML=data.tasks.length?sortT(data.tasks).map(taskHTML).join(''):'<div class="empty">Your tasks will appear here. Add one in Planner.</div>';
-habitsList.innerHTML=data.habits.length?data.habits.map(h=>{const st=streak(h),completed=(h.days||[]).length;return `<div class="habit"><div class="item-main"><div class="item-title">${esc(h.name)}</div><div class="item-meta">${completed} days completed · ${st} current streak</div></div></div>`}).join(''):'<div class="empty">Your habits will appear here. Add one in New Events.</div>'
+habitsList.innerHTML=data.habits.length?data.habits.map(h=>{const st=streak(h),completed=(h.days||[]).length;return `<div class="habit"><div class="item-main"><div class="item-title">${esc(h.name)}</div><div class="item-meta">${completed} days completed · ${st} current streak</div></div><button class="delete" type="button" onclick="delHabit('${h.id}')" aria-label="Delete habit: ${esc(h.name)}" title="Delete habit">×</button></div>`}).join(''):'<div class="empty">Your habits will appear here. Add one in New Events.</div>'
 if(document.activeElement!==noteSearch)renderNotes();renderNoteView();if($('globalSearch'))renderSearch();
 const taskDay=t=>String(t.due||'').slice(0,10);
 const openTasks=sortT(data.tasks.filter(t=>!t.done));
